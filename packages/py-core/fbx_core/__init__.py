@@ -1,15 +1,14 @@
 """Federal Bills Explainer Core Package."""
 
-from .db import init_database, get_database, get_session
-from .models import Bill, Explanation, Embedding, Base
+from .db import SessionLocal, get_session
+from .models import Base, Bill, Explanation, Embedding
 
 __all__ = [
-    "init_database",
-    "get_database",
+    "SessionLocal",
     "get_session",
+    "Base",
     "Bill",
     "Explanation",
     "Embedding",
-    "Base",
 ]
 

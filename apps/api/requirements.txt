@@ -1,5 +1,6 @@
-# py-core is installed separately in Dockerfile
+# Core dependencies (fbx-core is installed separately in Dockerfile)
 fastapi>=0.112
 uvicorn[standard]>=0.30
 alembic>=1.13
+psutil>=5.9  # For system monitoring metrics
 

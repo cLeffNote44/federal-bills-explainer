@@ -1,13 +1,17 @@
 # Federal Bills Explainer
 
-A monorepo for a federal legislation explainer that helps citizens understand federal laws through AI-generated explanations.
+> An AI-powered platform that makes federal legislation accessible to everyone through plain-language explanations and semantic search.
 
 ## Overview
 
-- **Backend**: FastAPI (Python) exposing endpoints for bills, explanations, and semantic search
-- **Ingestion**: CLI tool that fetches US federal bills, generates plain-language explanations using local ML models, and creates semantic embeddings
-- **Data store**: PostgreSQL with pgvector extension (Neon in prod, Docker in dev)
-- **Frontend**: Next.js application on Vercel for user interface
+**Federal Bills Explainer** is a comprehensive solution for understanding US federal legislation. It combines modern web technologies with AI/ML to transform complex legal text into clear, understandable explanations.
+
+### Key Components
+
+- **FastAPI Backend**: RESTful API with automatic documentation, semantic search, and bill management
+- **Ingestion Pipeline**: Automated CLI tool for fetching bills from Congress.gov and generating AI explanations
+- **Next.js Frontend**: Modern, responsive web interface for browsing and searching bills
+- **PostgreSQL + pgvector**: Scalable database with vector similarity search capabilities
 
 ## Tech Stack
 
@@ -32,14 +36,16 @@ A monorepo for a federal legislation explainer that helps citizens understand fe
 - Docker Desktop
 - Congress.gov API key (get from https://api.congress.gov/sign-up/)
 
-### Windows PowerShell Setup
+### Development Setup
 
-1) **Start Database and API via Docker:**
+1) **Start Infrastructure:**
 ```powershell
-cp infra/.env.example infra/.env
-# Edit infra/.env with your settings
-cd infra
-docker compose up -d db
+# Copy and configure environment file
+cp .env.example .env
+# Edit .env with your settings (database credentials, API keys, etc.)
+
+# Start all services with Docker Compose
+docker compose up -d
 ```
 
 2) **Set up and run ingestion module:**
@@ -65,21 +71,22 @@ pnpm install
 pnpm dev
 ```
 
-4) Browse
-- API: http://localhost:8000/healthz and /bills
-- Frontend: http://localhost:3000
+4) **Access the Application:**
+- API Documentation: http://localhost:8000/docs
+- API Health Check: http://localhost:8000/healthz
+- Frontend: http://localhost:3001
 
 ## Repository Structure
 
 ```
 apps/
-  api/         # FastAPI backend + Alembic migrations
-  ingestion/   # CLI tool for bill ingestion and ML processing
-  frontend/    # Next.js frontend application
+  api/         # FastAPI backend with RESTful endpoints
+  ingestion/   # Bill ingestion pipeline with AI processing
+  frontend/    # Next.js web application
 packages/
-  py-core/     # Shared Python core (models, utilities, services)
-infra/         # Docker Compose and environment configs
-.github/       # GitHub Actions CI/CD workflows
+  py-core/     # Shared Python package (models, database, utilities)
+infra/         # Kubernetes deployment configurations
+.github/       # CI/CD workflows and automation
 ```
 
 ## Key Features
@@ -93,10 +100,10 @@ infra/         # Docker Compose and environment configs
 
 ## Documentation
 
-- [Ingestion Module README](apps/ingestion/README.md) - Detailed setup and usage for the ingestion CLI
-- [API Documentation](apps/api/README.md) - Backend API setup and endpoints
-- [Frontend Documentation](apps/frontend/README.md) - Frontend development guide
-- [Contributing Guidelines](CONTRIBUTING.md) - How to contribute to the project
+- **[Ingestion Module](apps/ingestion/README.md)** - Detailed setup and usage for the bill ingestion pipeline
+- **[Contributing Guidelines](CONTRIBUTING.md)** - Development setup, code standards, and contribution process
+- **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current features and roadmap
+- **[API Documentation](http://localhost:8000/docs)** - Interactive API documentation (when running)
 
 ## Contributing
 

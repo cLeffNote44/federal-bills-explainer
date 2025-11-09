@@ -1,12 +1,14 @@
 [build-system]
-requires = ["setuptools", "wheel"]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
 
 [project]
 name = "fbx-core"
 version = "0.1.0"
-description = "Shared core for federal-bills-explainer"
-authors = [{name="Org", email="devnull@example.com"}]
+description = "Core models and database utilities for Federal Bills Explainer"
+readme = "README.md"
 requires-python = ">=3.11"
+license = {text = "MIT"}
 dependencies = [
   "pydantic>=2.7",
   "pydantic-settings>=2.2",

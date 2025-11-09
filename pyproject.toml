@@ -2,10 +2,9 @@
 name = "federal-bills-explainer"
 version = "1.0.0"
 description = "AI-powered platform for explaining US federal legislation"
-authors = ["Federal Bills Explainer Contributors"]
+authors = ["Federal Bills Explainer Team"]
 license = "MIT"
 readme = "README.md"
-repository = "https://github.com/yourusername/federal-bills-explainer"
 keywords = ["legislation", "congress", "ai", "nlp", "civic-tech"]
 
 [tool.poetry.dependencies]

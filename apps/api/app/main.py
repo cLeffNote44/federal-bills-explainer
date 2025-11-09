@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.openapi.utils import get_openapi
 from fbx_core.utils.settings import Settings
-from app.routers import health, bills, admin
+from app.routers import health, bills, admin, monitoring
 
 settings = Settings()
 
@@ -40,7 +40,6 @@ All responses are in JSON format with consistent error handling.
         routes=app.routes,
         servers=[
             {"url": "http://localhost:8000", "description": "Development server"},
-            {"url": "https://api.federalbillsexplainer.com", "description": "Production server"}
         ],
         tags=[
             {
@@ -61,9 +60,6 @@ All responses are in JSON format with consistent error handling.
             },
         ],
     )
-    openapi_schema["info"]["x-logo"] = {
-        "url": "https://fastapi.tiangolo.com/img/logo-margin/logo-teal.png"
-    }
     app.openapi_schema = openapi_schema
     return app.openapi_schema
 
@@ -88,3 +84,4 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(bills.router, prefix="/bills", tags=["bills"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
+app.include_router(monitoring.router)
