@@ -1,5 +1,12 @@
 # Federal Bills Explainer
 
+**Did you also take a look at the "Big Beautiful Bill (bloat)" and think, what in the name of??....****
+**Yeah well I did too. So I built this to help the fool in all of us understand what it is they do in washington**
+**...or at leasat try**
+
+email me with feedback cLeffNote44@pm.me
+
+
 > An AI-powered platform that makes federal legislation accessible to everyone through plain-language explanations and semantic search.
 
 ## Overview
