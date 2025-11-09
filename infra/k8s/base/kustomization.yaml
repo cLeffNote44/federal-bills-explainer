@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: federal-bills-explainer
+
+resources:
+  - namespace.yaml
+  - configmap.yaml
+  - secret.yaml
+  - deployment.yaml
+  - service.yaml
+  - ingress.yaml
+  - postgres.yaml
+  - redis.yaml
+
+commonLabels:
+  app.kubernetes.io/name: federal-bills-explainer
+  app.kubernetes.io/part-of: fbx
+  app.kubernetes.io/managed-by: kustomize
