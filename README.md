@@ -1,10 +1,17 @@
 # Federal Bills Explainer
 
+[![CI](https://github.com/cLeffNote44/federal-bills-explainer/actions/workflows/ci.yml/badge.svg)](https://github.com/cLeffNote44/federal-bills-explainer/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
+[![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
+[![Next.js 15](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org/)
+[![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+
 **Did you also take a look at the "Big Beautiful Bill (bloat)" and think, what in the name of??....****
 **Yeah well I did too. So I built this to help the fool in all of us understand what it is they do in washington**
-**...or at leasat try**
+**...or at least try**
 
-email me with feedback cLeffNote44@pm.me
+📧 Email me with feedback: **cLeffNote44@pm.me**
 
 
 > An AI-powered platform that makes federal legislation accessible to everyone through plain-language explanations and semantic search.
@@ -31,7 +38,7 @@ email me with feedback cLeffNote44@pm.me
 ### Infrastructure
 - **Backend API**: FastAPI with SQLAlchemy ORM
 - **Database**: PostgreSQL 15+ with pgvector
-- **Frontend**: Next.js 14 with TypeScript
+- **Frontend**: Next.js 15 with TypeScript
 - **Containerization**: Docker Compose for local development
 - **CI/CD**: GitHub Actions for automated workflows
 
