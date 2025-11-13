@@ -1,0 +1,76 @@
+# Ingestion-specific .dockerignore
+
+# Git
+.git
+.gitignore
+
+# Python
+__pycache__
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info
+.eggs/
+dist/
+build/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Tests
+tests/
+test_*.py
+*_test.py
+
+# Documentation
+*.md
+!README.md
+docs/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+*.env
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ML Models (downloaded at runtime)
+models/
+*.pkl
+*.h5
+*.pt
+*.pth
+
+# Embeddings (generated at runtime)
+embeddings/
+*.npy
+*.npz
+
+# Logs
+*.log
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# Development tools
+.pytest_cache/
+htmlcov/
+.coverage

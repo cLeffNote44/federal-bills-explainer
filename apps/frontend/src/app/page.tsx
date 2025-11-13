@@ -1,8 +1,19 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import Link from 'next/link';
 import { fetchBills, type Bill } from '@/lib/api';
+import {
+  Header,
+  SearchBar,
+  BillList,
+  Pagination,
+  LoadingSpinner,
+  ErrorAlert,
+  Container,
+  FilterPanel,
+  ExportButton,
+  type FilterValues,
+} from '@/components';
 
 export default function HomePage() {
   const [bills, setBills] = useState<Bill[]>([]);
@@ -10,6 +21,11 @@ export default function HomePage() {
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [page, setPage] = useState(1);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState<FilterValues>({
+    sortBy: 'date',
+    sortOrder: 'desc',
+  });
 
   useEffect(() => {
     loadBills();
@@ -18,7 +34,19 @@ export default function HomePage() {
   async function loadBills() {
     try {
       setLoading(true);
-      const data = await fetchBills({ q: search, page });
+      setError(null);
+      const data = await fetchBills({
+        q: search,
+        page,
+        status: filters.status,
+        congress: filters.congress,
+        bill_type: filters.billType,
+        date_from: filters.dateFrom,
+        date_to: filters.dateTo,
+        has_public_law: filters.hasPublicLaw,
+        sort_by: filters.sortBy,
+        sort_order: filters.sortOrder,
+      });
       setBills(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load bills');
@@ -33,86 +61,138 @@ export default function HomePage() {
     loadBills();
   }
 
+  function handlePageChange(newPage: number) {
+    setPage(newPage);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function handleApplyFilters() {
+    setPage(1);
+    loadBills();
+  }
+
+  function handleResetFilters() {
+    setFilters({
+      sortBy: 'date',
+      sortOrder: 'desc',
+    });
+    setPage(1);
+    // Will trigger loadBills via useEffect
+    setTimeout(loadBills, 0);
+  }
+
+  function buildExportUrl(format: 'csv' | 'json'): string {
+    const apiBase = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:8000';
+    const params = new URLSearchParams();
+
+    if (search) params.set('q', search);
+    if (filters.status) params.set('status', filters.status);
+    if (filters.congress) params.set('congress', filters.congress);
+    if (filters.billType) params.set('bill_type', filters.billType);
+    if (filters.dateFrom) params.set('date_from', filters.dateFrom);
+    if (filters.dateTo) params.set('date_to', filters.dateTo);
+    if (filters.hasPublicLaw !== undefined) params.set('has_public_law', filters.hasPublicLaw.toString());
+
+    return `${apiBase}/export/${format}?${params.toString()}`;
+  }
+
   return (
     <div className="min-h-screen">
-      <header className="bg-fed-blue text-white py-8">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold">Federal Bills Explainer</h1>
-          <p className="mt-2 text-blue-100">Understanding US legislation made simple</p>
-        </div>
-      </header>
+      <Header />
 
-      <main className="container mx-auto px-4 py-8">
-        <form onSubmit={handleSearch} className="mb-8">
-          <div className="flex gap-4 max-w-2xl">
-            <input
-              type="text"
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search bills..."
-              className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:border-fed-blue"
-            />
-            <button type="submit" className="btn-primary">
-              Search
+      <main>
+        <Container className="py-8">
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            onSubmit={handleSearch}
+            disabled={loading}
+            className="mb-6"
+          />
+
+          {/* Toolbar with Filters Toggle and Export Buttons */}
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <button
+              onClick={() => setShowFilters(!showFilters)}
+              className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-fed-blue"
+            >
+              <svg
+                className="mr-2 h-5 w-5 text-gray-500"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
+                />
+              </svg>
+              {showFilters ? 'Hide Filters' : 'Show Filters'}
             </button>
-          </div>
-        </form>
 
-        {loading && (
-          <div className="text-center py-12">
-            <div className="text-gray-500">Loading bills...</div>
-          </div>
-        )}
-
-        {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-8">
-            {error}
-          </div>
-        )}
-
-        {!loading && !error && (
-          <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-              {bills.map((bill) => (
-                <div key={`${bill.congress}-${bill.bill_type}-${bill.number}`} className="card">
-                  <h2 className="text-xl font-semibold mb-2">
-                    {bill.bill_type.toUpperCase()}-{bill.number}
-                  </h2>
-                  <p className="text-gray-600 mb-4 line-clamp-3">{bill.title}</p>
-                  {bill.public_law_number && (
-                    <p className="text-sm text-green-600 mb-4">
-                      ✓ Public Law {bill.public_law_number}
-                    </p>
-                  )}
-                  <Link
-                    href={`/bills/${bill.congress}/${bill.bill_type}/${bill.number}`}
-                    className="text-fed-blue hover:underline"
-                  >
-                    View Details →
-                  </Link>
-                </div>
-              ))}
+            <div className="flex gap-2">
+              <ExportButton
+                apiUrl={buildExportUrl('csv')}
+                filename={`federal_bills_${new Date().toISOString().split('T')[0]}.csv`}
+                format="csv"
+                disabled={loading}
+              />
+              <ExportButton
+                apiUrl={buildExportUrl('json')}
+                filename={`federal_bills_${new Date().toISOString().split('T')[0]}.json`}
+                format="json"
+                disabled={loading}
+              />
             </div>
+          </div>
 
-            <div className="mt-8 flex justify-center gap-4">
-              <button
-                onClick={() => setPage(Math.max(1, page - 1))}
-                disabled={page === 1}
-                className="px-4 py-2 border border-gray-300 rounded disabled:opacity-50"
-              >
-                Previous
-              </button>
-              <span className="px-4 py-2">Page {page}</span>
-              <button
-                onClick={() => setPage(page + 1)}
-                disabled={bills.length === 0}
-                className="px-4 py-2 border border-gray-300 rounded disabled:opacity-50"
-              >
-                Next
-              </button>
-            </div>
-          </>
-        )}
+          {/* Filter Panel */}
+          {showFilters && (
+            <FilterPanel
+              values={filters}
+              onChange={setFilters}
+              onApply={handleApplyFilters}
+              onReset={handleResetFilters}
+              className="mb-8"
+            />
+          )}
+
+          {error && (
+            <ErrorAlert
+              message={error}
+              onDismiss={() => setError(null)}
+              className="mb-8"
+            />
+          )}
+
+          {loading ? (
+            <LoadingSpinner text="Loading bills..." />
+          ) : (
+            <>
+              <BillList
+                bills={bills}
+                emptyMessage={
+                  search
+                    ? `No bills found matching "${search}"`
+                    : 'No bills available'
+                }
+              />
+
+              {bills.length > 0 && (
+                <Pagination
+                  currentPage={page}
+                  onPageChange={handlePageChange}
+                  hasNextPage={bills.length > 0}
+                  disabled={loading}
+                  className="mt-8"
+                />
+              )}
+            </>
+          )}
+        </Container>
       </main>
     </div>
   );

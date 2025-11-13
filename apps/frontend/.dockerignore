@@ -1,0 +1,71 @@
+# Frontend-specific .dockerignore
+
+# Git
+.git
+.gitignore
+
+# Dependencies
+node_modules/
+
+# Testing
+coverage/
+.nyc_output/
+src/__tests__/
+*.test.ts
+*.test.tsx
+*.spec.ts
+*.spec.tsx
+test/
+playwright-report/
+playwright/.cache/
+vitest.config.ts
+
+# Next.js
+.next/
+out/
+dist/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+.env.development
+.env.test
+*.env
+!.env.example
+!.env.local.example
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Documentation
+*.md
+!README.md
+
+# Build files
+*.tsbuildinfo
+
+# Logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# Temporary files
+tmp/
+temp/
+
+# Prettier
+.prettierignore
+.prettierrc
+
+# ESLint
+.eslintignore
+.eslintrc.json
+
+# TypeScript
+tsconfig.tsbuildinfo

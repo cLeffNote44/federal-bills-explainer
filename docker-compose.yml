@@ -3,20 +3,20 @@ version: '3.8'
 services:
   # PostgreSQL Database with pgvector
   db:
-    image: pgvector/pgvector:pg16
+    image: pgvector/pgvector:pg16-v0.7.4
     container_name: federal-bills-db
     restart: unless-stopped
     environment:
-      POSTGRES_USER: ${DB_USER:-fbx_user}
-      POSTGRES_PASSWORD: ${DB_PASSWORD:-fbx_password}
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
       POSTGRES_DB: ${DB_NAME:-federal_bills}
-      POSTGRES_HOST_AUTH_METHOD: md5
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
     ports:
       - "${DB_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-fbx_user}"]
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -25,7 +25,7 @@ services:
 
   # Redis Cache (Optional)
   redis:
-    image: redis:7-alpine
+    image: redis:7.4-alpine
     container_name: federal-bills-redis
     restart: unless-stopped
     ports:
@@ -49,12 +49,12 @@ services:
     container_name: federal-bills-api
     restart: unless-stopped
     environment:
-      FBX_DATABASE_URL: postgresql://${DB_USER:-fbx_user}:${DB_PASSWORD:-fbx_password}@db:5432/${DB_NAME:-federal_bills}
+      FBX_DATABASE_URL: postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/${DB_NAME:-federal_bills}
       FBX_REDIS_URL: redis://redis:6379/0
       FBX_ENVIRONMENT: ${ENVIRONMENT:-development}
-      FBX_JWT_SECRET_KEY: ${JWT_SECRET_KEY:-change-me-in-production}
+      FBX_JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required - generate with: openssl rand -hex 32}
       FBX_OPENAI_API_KEY: ${OPENAI_API_KEY}
-      FBX_CONGRESS_API_KEY: ${CONGRESS_API_KEY}
+      FBX_CONGRESS_API_KEY: ${CONGRESS_API_KEY:?CONGRESS_API_KEY is required}
     ports:
       - "${API_PORT:-8000}:8000"
     depends_on:
@@ -107,9 +107,9 @@ services:
       dockerfile: ./apps/ingestion/Dockerfile
     container_name: federal-bills-ingestion
     environment:
-      FBX_DATABASE_URL: postgresql://${DB_USER:-fbx_user}:${DB_PASSWORD:-fbx_password}@db:5432/${DB_NAME:-federal_bills}
+      FBX_DATABASE_URL: postgresql://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/${DB_NAME:-federal_bills}
       FBX_REDIS_URL: redis://redis:6379/0
-      FBX_CONGRESS_API_KEY: ${CONGRESS_API_KEY}
+      FBX_CONGRESS_API_KEY: ${CONGRESS_API_KEY:?CONGRESS_API_KEY is required}
       FBX_OPENAI_API_KEY: ${OPENAI_API_KEY}
     depends_on:
       db:
@@ -123,12 +123,12 @@ services:
 
   # pgAdmin (Optional - Database GUI)
   pgadmin:
-    image: dpage/pgadmin4:latest
+    image: dpage/pgadmin4:8.12
     container_name: federal-bills-pgadmin
     restart: unless-stopped
     environment:
-      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@federalbills.com}
-      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?PGADMIN_EMAIL is required}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD is required}
       PGADMIN_CONFIG_SERVER_MODE: 'False'
     ports:
       - "${PGADMIN_PORT:-5050}:80"
