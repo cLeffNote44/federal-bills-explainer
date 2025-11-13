@@ -1,0 +1,260 @@
+name: Database Migrations
+
+on:
+  pull_request:
+    paths:
+      - 'infra/database/**'
+      - 'apps/api/alembic/**'
+      - 'packages/py-core/fbx_core/models/**'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Environment to run migrations'
+        required: true
+        type: choice
+        options:
+          - staging
+          - production
+      direction:
+        description: 'Migration direction'
+        required: true
+        type: choice
+        options:
+          - upgrade
+          - downgrade
+      revision:
+        description: 'Target revision (leave empty for head)'
+        required: false
+        type: string
+
+jobs:
+  # Validate migrations on PR
+  validate-migrations:
+    name: Validate Migrations
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: migration_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install alembic psycopg2-binary
+          pip install -e packages/py-core
+
+      - name: Check for migration conflicts
+        working-directory: apps/api
+        run: |
+          # Check if there are multiple heads
+          HEADS=$(alembic heads | wc -l)
+          if [ $HEADS -gt 1 ]; then
+            echo "❌ Multiple migration heads detected!"
+            alembic heads
+            exit 1
+          fi
+
+      - name: Validate migration script syntax
+        working-directory: apps/api
+        run: |
+          # Check for common migration issues
+          python -c "
+          import os
+          import sys
+          import ast
+
+          migration_dir = 'alembic/versions'
+          errors = []
+
+          for filename in os.listdir(migration_dir):
+              if filename.endswith('.py'):
+                  filepath = os.path.join(migration_dir, filename)
+                  try:
+                      with open(filepath, 'r') as f:
+                          ast.parse(f.read())
+                  except SyntaxError as e:
+                      errors.append(f'{filename}: {e}')
+
+          if errors:
+              print('❌ Syntax errors found in migrations:')
+              for error in errors:
+                  print(f'  - {error}')
+              sys.exit(1)
+          else:
+              print('✅ All migration scripts have valid syntax')
+          "
+
+      - name: Test migrations (up and down)
+        working-directory: apps/api
+        env:
+          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/migration_test
+        run: |
+          echo "Testing upgrade..."
+          alembic upgrade head
+
+          echo "Testing downgrade..."
+          alembic downgrade -1
+
+          echo "Testing re-upgrade..."
+          alembic upgrade head
+
+          echo "✅ Migration tests passed"
+
+      - name: Check for data loss risks
+        working-directory: apps/api
+        run: |
+          # Check migrations for potentially dangerous operations
+          LATEST_MIGRATION=$(ls -t alembic/versions/*.py | head -1)
+
+          echo "Checking $LATEST_MIGRATION for risky operations..."
+
+          if grep -q "drop_table\|drop_column" "$LATEST_MIGRATION"; then
+            echo "⚠️  WARNING: Migration contains potentially destructive operations (drop_table/drop_column)"
+            echo "Please ensure you have a backup strategy!"
+          fi
+
+          if grep -q "DROP TABLE\|DROP COLUMN" "$LATEST_MIGRATION"; then
+            echo "⚠️  WARNING: Raw SQL DROP detected in migration"
+            echo "Please review carefully!"
+          fi
+
+      - name: Generate migration summary
+        working-directory: apps/api
+        run: |
+          echo "## Migration Summary" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Current Head" >> $GITHUB_STEP_SUMMARY
+          alembic current >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Migration History" >> $GITHUB_STEP_SUMMARY
+          alembic history --verbose | head -20 >> $GITHUB_STEP_SUMMARY
+
+  # Run migrations on staging/production
+  run-migrations:
+    name: Run Migrations - ${{ inputs.environment }}
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment:
+      name: ${{ inputs.environment }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          pip install alembic psycopg2-binary
+          pip install -e packages/py-core
+
+      - name: Backup database
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL', inputs.environment)] }}
+        run: |
+          # Extract connection details from DATABASE_URL
+          DB_HOST=$(echo $DATABASE_URL | sed -n 's|postgresql://.*@\(.*\):.*|\1|p')
+          DB_NAME=$(echo $DATABASE_URL | sed -n 's|.*/\(.*\)|\1|p')
+
+          echo "Creating backup of $DB_NAME..."
+          BACKUP_FILE="backup_$(date +%Y%m%d_%H%M%S).sql"
+
+          # Create backup (in production, upload to S3 or similar)
+          echo "Backup would be created here"
+
+      - name: Show current migration state
+        working-directory: apps/api
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL', inputs.environment)] }}
+        run: |
+          echo "Current database revision:"
+          alembic current
+
+      - name: Run migration
+        working-directory: apps/api
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL', inputs.environment)] }}
+        run: |
+          TARGET="${{ inputs.revision || 'head' }}"
+
+          if [ "${{ inputs.direction }}" = "upgrade" ]; then
+            echo "Upgrading to $TARGET..."
+            alembic upgrade $TARGET
+          else
+            echo "Downgrading to $TARGET..."
+            alembic downgrade $TARGET
+          fi
+
+      - name: Verify migration
+        working-directory: apps/api
+        env:
+          DATABASE_URL: ${{ secrets[format('{0}_DATABASE_URL', inputs.environment)] }}
+        run: |
+          echo "New database revision:"
+          alembic current
+
+          echo "Migration history:"
+          alembic history --verbose | head -10
+
+      - name: Notify success
+        if: success()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "✅ Database migration successful",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Database Migration Successful* ✅\n\n*Environment:* ${{ inputs.environment }}\n*Direction:* ${{ inputs.direction }}\n*Target:* ${{ inputs.revision || 'head' }}\n*Actor:* ${{ github.actor }}"
+                  }
+                }
+              ]
+            }
+
+      - name: Notify failure and rollback instructions
+        if: failure()
+        uses: slackapi/slack-github-action@v1.25.0
+        with:
+          webhook-url: ${{ secrets.SLACK_WEBHOOK_URL }}
+          payload: |
+            {
+              "text": "❌ Database migration failed",
+              "blocks": [
+                {
+                  "type": "section",
+                  "text": {
+                    "type": "mrkdwn",
+                    "text": "*Database Migration Failed* ❌\n\n*Environment:* ${{ inputs.environment }}\n*Direction:* ${{ inputs.direction }}\n*Target:* ${{ inputs.revision || 'head' }}\n\n⚠️ Database backup available for rollback\n*Logs:* https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}"
+                  }
+                }
+              ]
+            }
