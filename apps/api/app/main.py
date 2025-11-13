@@ -19,10 +19,11 @@ from fbx_core.middleware import (
     add_security_middleware,
     configure_cors,
     RateLimitMiddleware,
+    AnalyticsMiddleware,
 )
 
 # Router imports
-from app.routers import health, bills, admin, monitoring, export
+from app.routers import health, bills, admin, monitoring, export, analytics
 
 # Configure logging
 logging.basicConfig(
@@ -205,11 +206,15 @@ add_security_middleware(app, max_content_length=max_request_size)
 redis_url = os.getenv("REDIS_URL")
 app.add_middleware(RateLimitMiddleware, redis_url=redis_url)
 
+# Add analytics middleware (should be after rate limiting to track all requests)
+app.add_middleware(AnalyticsMiddleware, redis_url=redis_url)
+
 # Include routers
 app.include_router(health.router)
 app.include_router(bills.router, prefix="/bills", tags=["bills"])
 app.include_router(export.router, prefix="/export", tags=["export"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
+app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
 app.include_router(monitoring.router)
 
 # Initialize Prometheus instrumentation

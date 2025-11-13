@@ -9,6 +9,7 @@ from .security import (
 )
 from .rate_limit import RateLimitMiddleware, RateLimitConfig
 from .csrf import CSRFProtectionMiddleware, CSRFError, generate_csrf_token
+from .analytics import AnalyticsMiddleware, AnalyticsCollector
 
 __all__ = [
     "SecurityHeadersMiddleware",
@@ -21,4 +22,6 @@ __all__ = [
     "generate_csrf_token",
     "configure_cors",
     "add_security_middleware",
+    "AnalyticsMiddleware",
+    "AnalyticsCollector",
 ]
