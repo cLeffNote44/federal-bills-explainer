@@ -4,7 +4,7 @@ httpx==0.25.2
 pydantic==2.5.2
 pydantic-settings==2.1.0
 python-dotenv==1.2.1
-rich==13.7.0
+rich==14.2.0
 tenacity==8.2.3
 
 # ML/AI dependencies
