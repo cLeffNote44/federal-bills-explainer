@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from prometheus_fastapi_instrumentator import Instrumentator
 
 # Core imports
 from fbx_core.utils.settings import Settings
@@ -205,6 +206,24 @@ app.include_router(health.router)
 app.include_router(bills.router, prefix="/bills", tags=["bills"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(monitoring.router)
+
+# Initialize Prometheus instrumentation
+instrumentator = Instrumentator(
+    should_group_status_codes=True,
+    should_ignore_untemplated=True,
+    should_respect_env_var=True,
+    should_instrument_requests_inprogress=True,
+    excluded_handlers=["/metrics", "/monitoring/metrics/prometheus", "/healthz"],
+    env_var_name="ENABLE_METRICS",
+    inprogress_name="http_requests_inprogress",
+    inprogress_labels=True,
+)
+
+# Add additional metrics
+instrumentator.add_prometheus()
+
+# Expose metrics endpoint
+instrumentator.instrument(app).expose(app, endpoint="/monitoring/metrics/prometheus", include_in_schema=False)
 
 
 # Root endpoint
