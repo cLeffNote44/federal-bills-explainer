@@ -23,7 +23,7 @@ from fbx_core.middleware import (
 )
 
 # Router imports
-from app.routers import health, bills, admin, monitoring, export, analytics, search
+from app.routers import health, bills, admin, monitoring, export, analytics, search, auth, social, sharing
 
 # Configure logging
 logging.basicConfig(
@@ -216,6 +216,9 @@ app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(export.router, prefix="/export", tags=["export"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])
+app.include_router(auth.router, prefix="/auth", tags=["auth"])
+app.include_router(social.router, prefix="/social", tags=["social"])
+app.include_router(sharing.router, prefix="/sharing", tags=["sharing"])
 app.include_router(monitoring.router)
 
 # Initialize Prometheus instrumentation

@@ -21,6 +21,10 @@ export { default as ErrorAnalytics } from './ErrorAnalytics';
 export { default as UserAgentAnalytics } from './UserAgentAnalytics';
 export { default as SearchHistory } from './SearchHistory';
 export { default as SavedFilterPresets } from './SavedFilterPresets';
+export { default as LoginForm } from './LoginForm';
+export { default as BookmarkButton } from './BookmarkButton';
+export { default as CommentSection } from './CommentSection';
+export { default as ShareButton } from './ShareButton';
 
 // Export types
 export type { FilterValues } from './FilterPanel';

@@ -1,31 +1,31 @@
-"""Authentication modules for Federal Bills Explainer."""
+"""Authentication utilities."""
 
-from .jwt_auth import (
+from .utils import (
+    hash_password,
+    verify_password,
     create_access_token,
     create_refresh_token,
-    create_token_pair,
-    verify_token,
-    get_current_user,
-    get_current_active_user,
-    require_scope,
-    verify_admin_token,
-    Token,
-    TokenPair,
-    TokenData,
-    Scopes,
+    decode_token,
+    generate_verification_token,
+    generate_reset_token,
+    generate_user_id,
+    validate_email,
+    validate_username,
+    validate_password,
+    get_gravatar_url,
 )
 
 __all__ = [
+    "hash_password",
+    "verify_password",
     "create_access_token",
     "create_refresh_token",
-    "create_token_pair",
-    "verify_token",
-    "get_current_user",
-    "get_current_active_user",
-    "require_scope",
-    "verify_admin_token",
-    "Token",
-    "TokenPair",
-    "TokenData",
-    "Scopes",
+    "decode_token",
+    "generate_verification_token",
+    "generate_reset_token",
+    "generate_user_id",
+    "validate_email",
+    "validate_username",
+    "validate_password",
+    "get_gravatar_url",
 ]
