@@ -121,7 +121,7 @@ jobs:
         working-directory: apps/frontend
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
           node-version: "20"
       - uses: pnpm/action-setup@v4
