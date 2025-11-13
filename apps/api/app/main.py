@@ -23,7 +23,7 @@ from fbx_core.middleware import (
 )
 
 # Router imports
-from app.routers import health, bills, admin, monitoring, export, analytics
+from app.routers import health, bills, admin, monitoring, export, analytics, search
 
 # Configure logging
 logging.basicConfig(
@@ -212,6 +212,7 @@ app.add_middleware(AnalyticsMiddleware, redis_url=redis_url)
 # Include routers
 app.include_router(health.router)
 app.include_router(bills.router, prefix="/bills", tags=["bills"])
+app.include_router(search.router, prefix="/search", tags=["search"])
 app.include_router(export.router, prefix="/export", tags=["export"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(analytics.router, prefix="/analytics", tags=["analytics"])

@@ -3,12 +3,14 @@ export { default as BillCard } from './BillCard';
 export { default as BillList } from './BillList';
 export { default as BillDetailView } from './BillDetailView';
 export { default as SearchBar } from './SearchBar';
+export { default as SearchBarEnhanced } from './SearchBarEnhanced';
 export { default as Pagination } from './Pagination';
 export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as ErrorAlert } from './ErrorAlert';
 export { default as Header } from './Header';
 export { default as Container } from './Container';
 export { default as FilterPanel } from './FilterPanel';
+export { default as AdvancedFilterPanel } from './AdvancedFilterPanel';
 export { default as ExportButton } from './ExportButton';
 export { default as MobileNav } from './MobileNav';
 export { default as BottomSheet } from './BottomSheet';
@@ -17,6 +19,9 @@ export { default as MobileFilterSheet } from './MobileFilterSheet';
 export { default as AnalyticsTrendsChart } from './AnalyticsTrendsChart';
 export { default as ErrorAnalytics } from './ErrorAnalytics';
 export { default as UserAgentAnalytics } from './UserAgentAnalytics';
+export { default as SearchHistory } from './SearchHistory';
+export { default as SavedFilterPresets } from './SavedFilterPresets';
 
 // Export types
 export type { FilterValues } from './FilterPanel';
+export type { AdvancedFilterValues } from './AdvancedFilterPanel';
