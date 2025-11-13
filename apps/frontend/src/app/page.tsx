@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import dynamic from 'next/dynamic';
 import { fetchBills, type Bill } from '@/lib/api';
 import {
   Header,
@@ -10,10 +11,25 @@ import {
   LoadingSpinner,
   ErrorAlert,
   Container,
-  FilterPanel,
-  ExportButton,
   type FilterValues,
 } from '@/components';
+
+// Lazy load heavy components for better initial page load
+const FilterPanel = dynamic(
+  () => import('@/components/FilterPanel'),
+  {
+    loading: () => <div className="animate-pulse bg-gray-200 h-96 rounded-lg"></div>,
+    ssr: false, // Filter panel doesn't need SSR
+  }
+);
+
+const ExportButton = dynamic(
+  () => import('@/components/ExportButton'),
+  {
+    loading: () => <div className="animate-pulse bg-gray-200 h-10 w-32 rounded-md"></div>,
+    ssr: false, // Export buttons don't need SSR
+  }
+);
 
 export default function HomePage() {
   const [bills, setBills] = useState<Bill[]>([]);
