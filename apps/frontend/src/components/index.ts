@@ -8,3 +8,8 @@ export { default as LoadingSpinner } from './LoadingSpinner';
 export { default as ErrorAlert } from './ErrorAlert';
 export { default as Header } from './Header';
 export { default as Container } from './Container';
+export { default as FilterPanel } from './FilterPanel';
+export { default as ExportButton } from './ExportButton';
+
+// Export types
+export type { FilterValues } from './FilterPanel';

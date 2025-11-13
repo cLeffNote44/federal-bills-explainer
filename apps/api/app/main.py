@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 from fastapi.openapi.utils import get_openapi
+from fastapi.middleware.gzip import GZipMiddleware
 from prometheus_fastapi_instrumentator import Instrumentator
 
 # Core imports
@@ -21,7 +22,7 @@ from fbx_core.middleware import (
 )
 
 # Router imports
-from app.routers import health, bills, admin, monitoring
+from app.routers import health, bills, admin, monitoring, export
 
 # Configure logging
 logging.basicConfig(
@@ -193,6 +194,9 @@ app.openapi = custom_openapi
 cors_origins = [origin.strip() for origin in settings.cors_origins]
 configure_cors(app, cors_origins)
 
+# Add response compression (should be one of the first middleware)
+app.add_middleware(GZipMiddleware, minimum_size=1000)  # Compress responses > 1KB
+
 # Add security middleware (order matters - added in reverse execution order)
 max_request_size = int(os.getenv("MAX_REQUEST_SIZE", 10 * 1024 * 1024))
 add_security_middleware(app, max_content_length=max_request_size)
@@ -204,6 +208,7 @@ app.add_middleware(RateLimitMiddleware, redis_url=redis_url)
 # Include routers
 app.include_router(health.router)
 app.include_router(bills.router, prefix="/bills", tags=["bills"])
+app.include_router(export.router, prefix="/export", tags=["export"])
 app.include_router(admin.router, prefix="/admin", tags=["admin"])
 app.include_router(monitoring.router)
 
