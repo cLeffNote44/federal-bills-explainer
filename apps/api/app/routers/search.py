@@ -224,9 +224,11 @@ async def get_popular_searches(
     Get popular/trending search queries.
 
     This could be enhanced with analytics integration to show actual popular searches.
-    For now, returns suggested topics.
+    For now, returns curated suggested topics.
+
+    NOTE: Future enhancement - query analytics database for trending search terms
+    from actual user searches to provide dynamic, data-driven suggestions.
     """
-    # TODO: Integrate with analytics to get real popular searches
     suggestions = [
         "climate change",
         "healthcare",
@@ -395,8 +397,8 @@ async def get_my_search_history(
 
         history = SearchHistory(redis_client)
 
-        # For now, use IP-based history
-        # TODO: Add user authentication and use user_id
+        # NOTE: Currently uses IP-based history for anonymous users
+        # Future: Integrate with auth system to use user_id for authenticated users
         ip_address = request.client.host if request.client else None
         if not ip_address:
             return {"history": [], "message": "Unable to identify session"}
@@ -424,8 +426,8 @@ async def clear_my_search_history(request: Request):
 
         history = SearchHistory(redis_client)
 
-        # For now, use IP-based history
-        # TODO: Add user authentication and use user_id
+        # NOTE: Currently uses IP-based history for anonymous users
+        # Future: Integrate with auth system to use user_id for authenticated users
         ip_address = request.client.host if request.client else None
         if not ip_address:
             return {"message": "Unable to identify session"}

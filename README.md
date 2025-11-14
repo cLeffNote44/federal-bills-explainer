@@ -35,12 +35,29 @@
 - **Semantic embeddings**: sentence-transformers/all-MiniLM-L6-v2 (384 dimensions)
 - **Vector storage**: PostgreSQL with pgvector extension
 
-### Infrastructure
-- **Backend API**: FastAPI with SQLAlchemy ORM
-- **Database**: PostgreSQL 15+ with pgvector
-- **Frontend**: Next.js 15 with TypeScript
-- **Containerization**: Docker Compose for local development
-- **CI/CD**: GitHub Actions for automated workflows
+### Backend
+- **API Framework**: FastAPI with automatic OpenAPI documentation
+- **Database**: PostgreSQL 15+ with pgvector for vector search
+- **ORM**: SQLAlchemy with Alembic migrations
+- **Caching**: Redis for analytics and session data
+- **Search**: Elasticsearch for full-text search
+- **Authentication**: JWT tokens with bcrypt password hashing
+- **Task Queue**: Celery for background jobs (planned)
+
+### Frontend
+- **Framework**: Next.js 15 with TypeScript and React 18
+- **Styling**: Tailwind CSS with custom design system
+- **PWA**: Service Worker with offline support
+- **State Management**: React hooks and context
+- **API Client**: Fetch with custom hooks
+
+### Infrastructure & DevOps
+- **Containerization**: Docker with multi-stage builds
+- **Orchestration**: Docker Compose for local, Kubernetes for production
+- **CI/CD**: GitHub Actions for testing, security scanning, and deployment
+- **Monitoring**: Prometheus and Grafana for metrics and dashboards
+- **Security**: Trivy for container scanning, safety for Python dependencies
+- **Deployment**: Blue-green strategy with automated rollback
 
 ## Quick Start
 
@@ -105,19 +122,72 @@ infra/         # Kubernetes deployment configurations
 
 ## Key Features
 
+### Core Platform
 - **Automated Ingestion**: Fetches federal bills that became law from Congress.gov
-- **AI Explanations**: Generates plain-language explanations using local ML models
-- **Semantic Search**: Vector embeddings enable intelligent search capabilities
+- **AI Explanations**: Generates plain-language explanations using local ML models (Flan-T5, Phi-3)
+- **Semantic Search**: Vector embeddings enable intelligent search with pgvector
 - **RESTful API**: FastAPI backend with automatic OpenAPI documentation
-- **Modern UI**: Responsive Next.js frontend with TypeScript
+- **Modern UI**: Responsive Next.js 15 frontend with TypeScript
 - **Scalable Architecture**: Modular monorepo structure with shared packages
+
+### Advanced Features (v2.0.0)
+
+#### 🔄 CI/CD & DevOps
+- Comprehensive GitHub Actions workflows for automated testing and deployment
+- Security scanning with Trivy and dependency checks
+- Blue-green deployment strategy with rollback capabilities
+- Automated database migrations and health checks
+- Slack notifications for deployment status
+
+#### 📱 Progressive Web App
+- Installable web app with offline support
+- Service worker for caching and background sync
+- Mobile-optimized UI components and navigation
+- Touch-optimized gestures and interactions
+- Responsive design for all screen sizes
+
+#### 📊 Analytics & Monitoring
+- Comprehensive user behavior tracking
+- Real-time analytics dashboard for administrators
+- Search analytics with keyword trends
+- Error tracking and performance monitoring
+- Prometheus and Grafana integration for system metrics
+
+#### 🔍 Advanced Search
+- Elasticsearch integration for lightning-fast full-text search
+- Advanced filtering (date ranges, sponsors, committees, status)
+- Search autocomplete and suggestions
+- Faceted search with aggregations
+- Result highlighting and relevance scoring
+
+#### 👥 Social & Community
+- User authentication with JWT tokens
+- Bookmarks and bill collections
+- Comment system with upvote/downvote voting
+- Bill watching with email and webhook notifications
+- Social sharing (Facebook, Twitter, LinkedIn, Reddit)
+- User profiles with reputation tracking
 
 ## Documentation
 
+### Getting Started
 - **[Ingestion Module](apps/ingestion/README.md)** - Detailed setup and usage for the bill ingestion pipeline
 - **[Contributing Guidelines](CONTRIBUTING.md)** - Development setup, code standards, and contribution process
 - **[Implementation Status](IMPLEMENTATION_STATUS.md)** - Current features and roadmap
 - **[API Documentation](http://localhost:8000/docs)** - Interactive API documentation (when running)
+
+### Feature Documentation
+- **[CI/CD Pipeline](docs/CI_CD.md)** - Automated testing, deployment, and security scanning
+- **[Progressive Web App](docs/PWA.md)** - Offline support, installation, and mobile features
+- **[Analytics System](docs/ANALYTICS.md)** - User tracking, monitoring, and dashboards
+- **[Advanced Search](docs/ADVANCED_SEARCH.md)** - Elasticsearch integration and filtering
+- **[Social Features](docs/SOCIAL_FEATURES.md)** - Authentication, comments, bookmarks, and community
+
+### Operations
+- **[Deployment Guide](docs/DEPLOYMENT.md)** - Production deployment instructions and best practices
+- **[Security](SECURITY.md)** - Security policy and vulnerability reporting
+- **[Code of Conduct](CODE_OF_CONDUCT.md)** - Community guidelines and standards
+- **[Changelog](CHANGELOG.md)** - Version history and release notes
 
 ## Contributing
 

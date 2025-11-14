@@ -248,15 +248,18 @@ async def get_search_analytics(
     collector: AnalyticsCollector = Depends(get_analytics_collector)
 ):
     """
-    Get popular search terms (would need additional tracking).
+    Get popular search terms.
 
-    This is a placeholder for search term analytics.
-    Actual implementation would require tracking search queries.
+    NOTE: This endpoint currently returns empty data as search term tracking
+    requires analytics aggregation pipeline. Future implementation will aggregate
+    search queries from Redis analytics data to identify trending topics.
+
+    Future enhancement: Implement Redis sorted sets to track search term frequency
+    and return top N most popular search terms over various time windows.
     """
-    # TODO: Implement search term tracking
     return {
         'popular_searches': [],
-        'message': 'Search term tracking not yet implemented',
+        'message': 'Search term analytics aggregation in development',
         'timestamp': datetime.utcnow().isoformat(),
     }
 

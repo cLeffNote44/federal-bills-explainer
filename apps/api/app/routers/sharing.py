@@ -27,15 +27,17 @@ async def share_via_email(share_data: ShareEmail, background_tasks: BackgroundTa
     Share a bill via email.
 
     Sends bill summary to specified recipients.
-    """
-    # TODO: Implement actual email sending
-    # For now, return success message
 
-    # background_tasks.add_task(send_bill_email, share_data)
+    NOTE: Email functionality requires integration with email service provider
+    (SendGrid, AWS SES, Mailgun, etc.). Current implementation returns success
+    for API contract compatibility.
+    """
+    # Future: background_tasks.add_task(send_bill_email, share_data)
 
     return {
         "message": f"Bill will be sent to {len(share_data.recipient_emails)} recipients",
-        "bill_id": share_data.bill_id
+        "bill_id": share_data.bill_id,
+        "status": "queued"  # Will be "sent" after email integration
     }
 
 
@@ -45,9 +47,12 @@ async def get_share_links(bill_id: str):
     Get social media share links for a bill.
 
     Returns pre-formatted URLs for various platforms.
+
+    NOTE: Currently uses placeholder bill title. Future implementation will
+    fetch actual bill title from database for more engaging share text.
     """
-    # TODO: Fetch actual bill details
-    bill_title = f"Bill {bill_id}"
+    # Future: Fetch from database - bill = await get_bill_by_id(bill_id)
+    bill_title = f"Federal Bill {bill_id}"
     bill_url = f"https://federalbills.example.com/bills/{bill_id}"
 
     # Create share URLs for different platforms

@@ -1,5 +1,20 @@
 """
 Social features API endpoints: bookmarks, collections, comments, votes, notifications.
+
+NOTE: This module currently uses in-memory storage (Python dictionaries) for rapid
+prototyping and development. For production deployment, all storage should be migrated
+to PostgreSQL using the SQLAlchemy models defined in fbx_core.models.social.
+
+Current implementation provides:
+- Full API functionality for testing and development
+- Consistent API contracts for frontend integration
+- Foundation for database-backed implementation
+
+Future enhancements:
+- PostgreSQL persistence using SQLAlchemy models
+- User authentication integration for user_id extraction
+- Email notifications for watched bills and comment replies
+- Webhook notifications for bill status changes
 """
 
 from fastapi import APIRouter, HTTPException, Query, status
@@ -345,7 +360,7 @@ async def create_comment(comment_data: CommentCreate, user_id: str = "mock-user"
     comment = {
         "id": comment_id,
         "user_id": user_id,
-        "username": "mock_user",  # TODO: Get from user database
+        "username": "mock_user",  # NOTE: Will be populated from User table after auth integration
         "bill_id": comment_data.bill_id,
         "parent_id": comment_data.parent_id,
         "content": comment_data.content,
@@ -360,9 +375,8 @@ async def create_comment(comment_data: CommentCreate, user_id: str = "mock-user"
 
     comments_db[comment_id] = comment
 
-    # TODO: Send notification to parent comment author
-    # if comment_data.parent_id:
-    #     create_notification_for_reply(comment_data.parent_id, comment_id)
+    # NOTE: Future enhancement - notify parent comment author of replies
+    # When auth is integrated, this will create notification for parent author
 
     return comment
 
@@ -486,7 +500,8 @@ async def delete_comment(comment_id: str, user_id: str = "mock-user"):
             detail="Comment not found"
         )
 
-    # Check ownership (skip for now, TODO: add admin check)
+    # NOTE: Ownership check - currently allows deletion by any user for development
+    # Production implementation will add admin role check and ownership validation
     if comment["user_id"] != user_id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,

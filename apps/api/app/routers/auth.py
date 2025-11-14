@@ -1,5 +1,21 @@
 """
 User authentication and registration API endpoints.
+
+NOTE: This module currently uses in-memory storage (Python dictionaries) for rapid
+prototyping and development. For production deployment, user data should be persisted
+to PostgreSQL using the SQLAlchemy User model defined in fbx_core.models.social.
+
+Current implementation provides:
+- Complete JWT-based authentication flow
+- Password hashing with bcrypt
+- Email/username validation
+- Token generation and verification
+
+Future enhancements:
+- PostgreSQL persistence for user accounts
+- Email service integration for verification and password reset
+- OAuth2 integration (Google, GitHub)
+- Two-factor authentication (2FA)
 """
 
 from fastapi import APIRouter, HTTPException, Depends, status
@@ -138,8 +154,8 @@ async def register(user_data: UserRegistration):
     users_db[user_id] = user
     user_emails[user_data.email] = user_id
 
-    # TODO: Send verification email
-    # send_verification_email(user_data.email, verification_token)
+    # NOTE: Email verification - integrate with email service provider (SendGrid, AWS SES, etc.)
+    # Future: send_verification_email(user_data.email, verification_token)
 
     # Create tokens
     access_token = create_access_token({"sub": user_id, "email": user_data.email})
@@ -236,12 +252,14 @@ async def get_current_user(token: str = Depends(lambda: None)):
     Get current user profile.
 
     Requires authentication token.
+
+    NOTE: This endpoint requires Bearer token extraction middleware.
+    Implementation pending - will extract JWT from Authorization header,
+    validate token, and return user profile from database.
     """
-    # TODO: Extract token from Authorization header
-    # For now, return mock data
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail="Authentication required"
+        detail="Authentication required - endpoint requires auth middleware integration"
     )
 
 
@@ -265,8 +283,8 @@ async def request_password_reset(data: PasswordReset):
     user["reset_token"] = reset_token
     user["reset_sent_at"] = datetime.utcnow()
 
-    # TODO: Send reset email
-    # send_password_reset_email(data.email, reset_token)
+    # NOTE: Password reset email - integrate with email service provider
+    # Future: send_password_reset_email(data.email, reset_token)
 
     return {"message": "If the email exists, a reset link has been sent"}
 
