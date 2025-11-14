@@ -1,0 +1,60 @@
+# Python backend and ingestion (not deployed to Vercel)
+apps/api/
+apps/ingestion/
+packages/py-core/
+
+# Infrastructure files
+infra/
+docker-compose.yml
+docker-compose.*.yml
+Dockerfile
+*.Dockerfile
+
+# Development files
+.venv/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+*.log
+
+# Test files
+*.test.*
+*.spec.*
+tests/
+**/__tests__/
+**/test/
+coverage/
+.coverage
+htmlcov/
+.pytest_cache/
+
+# CI/CD
+.github/
+
+# Documentation (optional - remove if you want docs on Vercel)
+docs/
+*.md
+!apps/frontend/README.md
+
+# Database and local data
+*.db
+*.sqlite
+*.sqlite3
+data/
+backups/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Environment files (use Vercel env vars instead)
+.env
+.env.*
+!.env.example
+!.env.local.example
