@@ -1,20 +1,8 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "version": 2,
-  "buildCommand": "cd apps/frontend && pnpm install && pnpm build",
-  "outputDirectory": "apps/frontend/.next",
+  "buildCommand": "pnpm install && pnpm --filter frontend build",
+  "devCommand": "pnpm --filter frontend dev",
   "installCommand": "pnpm install",
-  "framework": "nextjs",
-  "regions": ["iad1"],
-  "build": {
-    "env": {
-      "NEXT_PUBLIC_API_BASE_URL": "@api_base_url"
-    }
-  },
-  "git": {
-    "deploymentEnabled": {
-      "main": true,
-      "claude/*": false
-    }
-  }
+  "outputDirectory": "apps/frontend/.next",
+  "framework": null
 }

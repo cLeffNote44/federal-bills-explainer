@@ -80,8 +80,8 @@ export default function UserAgentAnalytics({
   }
 
   const totalRequests = Object.values(data.categories).reduce((a, b) => a + b, 0);
-  const getPercentage = (value: number) => {
-    if (totalRequests === 0) return 0;
+  const getPercentage = (value: number): string => {
+    if (totalRequests === 0) return '0.0';
     return ((value / totalRequests) * 100).toFixed(1);
   };
 

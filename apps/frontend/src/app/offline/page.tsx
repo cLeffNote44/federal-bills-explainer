@@ -1,3 +1,5 @@
+'use client';
+
 import { Header, Container } from '@/components';
 
 export default function OfflinePage() {

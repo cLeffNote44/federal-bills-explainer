@@ -163,10 +163,14 @@ export async function clearCache(): Promise<boolean> {
           resolve(event.data.success);
         };
 
-        registration.active.postMessage(
-          { type: 'CLEAR_CACHE' },
-          [messageChannel.port2]
-        );
+        if (registration.active) {
+          registration.active.postMessage(
+            { type: 'CLEAR_CACHE' },
+            [messageChannel.port2]
+          );
+        } else {
+          resolve(false);
+        }
       });
     }
 

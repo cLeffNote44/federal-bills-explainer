@@ -1,0 +1,19 @@
+{
+  "name": "federal-bills-explainer-monorepo",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Federal Bills Explainer - Monorepo root",
+  "scripts": {
+    "dev:frontend": "pnpm --filter frontend dev",
+    "build:frontend": "pnpm --filter frontend build",
+    "start:frontend": "pnpm --filter frontend start",
+    "lint:frontend": "pnpm --filter frontend lint"
+  },
+  "keywords": ["federal-bills", "legislation", "congress"],
+  "author": "Federal Bills Explainer",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "pnpm": ">=8.0.0"
+  }
+}
