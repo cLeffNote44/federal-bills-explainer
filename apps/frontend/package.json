@@ -28,7 +28,7 @@
     "@types/node": "24.10.1",
     "@types/react": "18.2.63",
     "@types/react-dom": "18.2.18",
-    "autoprefixer": "10.4.22",
+    "autoprefixer": "10.4.23",
     "eslint": "9.39.2",
     "eslint-config-next": "15.5.7",
     "postcss": "8.5.6",
