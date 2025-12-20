@@ -1,0 +1,133 @@
+[
+  {
+    "congress": 118,
+    "bill_type": "hr",
+    "number": 1,
+    "title": "Lower Energy Costs Act",
+    "summary": "This bill addresses energy production on federal lands and waters, energy permitting, the electrical grid, and energy exports.",
+    "status": "passed_house",
+    "introduced_date": "2023-01-09",
+    "latest_action_date": "2023-03-30",
+    "sponsor": {
+      "name": "Steve Scalise",
+      "party": "R",
+      "state": "LA"
+    },
+    "cosponsors_count": 156
+  },
+  {
+    "congress": 118,
+    "bill_type": "hr",
+    "number": 2,
+    "title": "Secure the Border Act of 2023",
+    "summary": "This bill addresses immigration and border security matters, including the construction of the border wall.",
+    "status": "passed_house",
+    "introduced_date": "2023-01-09",
+    "latest_action_date": "2023-05-11",
+    "sponsor": {
+      "name": "Mario Diaz-Balart",
+      "party": "R",
+      "state": "FL"
+    },
+    "cosponsors_count": 64
+  },
+  {
+    "congress": 118,
+    "bill_type": "s",
+    "number": 1,
+    "title": "A bill to designate the clinic of the Department of Veterans Affairs in Gallup, New Mexico",
+    "summary": "This bill designates the clinic of the Department of Veterans Affairs in Gallup, New Mexico, as the Hiroshi 'Hershey' Miyamura VA Clinic.",
+    "status": "became_law",
+    "public_law_number": "118-1",
+    "introduced_date": "2023-01-03",
+    "latest_action_date": "2023-04-06",
+    "sponsor": {
+      "name": "Martin Heinrich",
+      "party": "D",
+      "state": "NM"
+    },
+    "cosponsors_count": 4
+  },
+  {
+    "congress": 118,
+    "bill_type": "hr",
+    "number": 3746,
+    "title": "Fiscal Responsibility Act of 2023",
+    "summary": "This bill suspends the public debt limit through January 1, 2025, and establishes new discretionary spending limits.",
+    "status": "became_law",
+    "public_law_number": "118-5",
+    "introduced_date": "2023-05-29",
+    "latest_action_date": "2023-06-03",
+    "sponsor": {
+      "name": "Jodey Arrington",
+      "party": "R",
+      "state": "TX"
+    },
+    "cosponsors_count": 0
+  },
+  {
+    "congress": 118,
+    "bill_type": "hr",
+    "number": 5525,
+    "title": "National Defense Authorization Act for Fiscal Year 2024",
+    "summary": "This bill authorizes FY2024 appropriations and sets forth policies for Department of Defense programs and activities.",
+    "status": "became_law",
+    "public_law_number": "118-31",
+    "introduced_date": "2023-09-18",
+    "latest_action_date": "2023-12-22",
+    "sponsor": {
+      "name": "Mike Rogers",
+      "party": "R",
+      "state": "AL"
+    },
+    "cosponsors_count": 3
+  },
+  {
+    "congress": 118,
+    "bill_type": "hr",
+    "number": 7024,
+    "title": "Tax Relief for American Families and Workers Act of 2024",
+    "summary": "This bill modifies various tax provisions, including expanding the child tax credit and extending several business tax provisions.",
+    "status": "passed_house",
+    "introduced_date": "2024-01-17",
+    "latest_action_date": "2024-01-31",
+    "sponsor": {
+      "name": "Jason Smith",
+      "party": "R",
+      "state": "MO"
+    },
+    "cosponsors_count": 55
+  },
+  {
+    "congress": 118,
+    "bill_type": "s",
+    "number": 2226,
+    "title": "Bipartisan Infrastructure Law Technical Corrections Act",
+    "summary": "This bill makes technical corrections to the Infrastructure Investment and Jobs Act.",
+    "status": "in_committee",
+    "introduced_date": "2023-07-12",
+    "latest_action_date": "2023-07-12",
+    "sponsor": {
+      "name": "Tom Carper",
+      "party": "D",
+      "state": "DE"
+    },
+    "cosponsors_count": 2
+  },
+  {
+    "congress": 118,
+    "bill_type": "hr",
+    "number": 8070,
+    "title": "Servicemember Quality of Life Improvement and National Defense Authorization Act for Fiscal Year 2025",
+    "summary": "This bill authorizes FY2025 appropriations for Department of Defense activities and military construction.",
+    "status": "passed_house",
+    "introduced_date": "2024-04-19",
+    "latest_action_date": "2024-06-14",
+    "sponsor": {
+      "name": "Mike Rogers",
+      "party": "R",
+      "state": "AL"
+    },
+    "cosponsors_count": 0
+  }
+]

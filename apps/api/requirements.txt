@@ -1,0 +1,13 @@
+# Core dependencies (fbx-core is installed separately in Dockerfile)
+fastapi>=0.112
+uvicorn[standard]>=0.30
+alembic>=1.13
+psutil>=5.9  # For system monitoring metrics
+
+# Security and caching (for new middleware)
+redis[hiredis]>=5.0.1  # Redis client with C parser for performance
+python-jose[cryptography]>=3.3.0  # JWT token handling
+
+# Monitoring and metrics
+prometheus-fastapi-instrumentator>=7.0.0  # Prometheus metrics collection
+

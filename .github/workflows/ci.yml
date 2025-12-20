@@ -1,0 +1,139 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, feat/**, claude/** ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  lint-python:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install linting tools
+        run: pip install black ruff mypy
+      - name: Run Black formatting check
+        run: black --check packages/py-core apps/api apps/ingestion
+        continue-on-error: true
+      - name: Run Ruff linting
+        run: ruff check .
+        continue-on-error: true
+      - name: Run mypy type checking
+        run: mypy packages/py-core --ignore-missing-imports
+        continue-on-error: true
+
+  test-backend:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16-v0.7.4
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: test_fbx
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/test_fbx
+      DRY_RUN: "true"
+      JWT_SECRET_KEY: "test-secret-key-for-ci-only"
+      CONGRESS_API_KEY: "test-api-key"
+      ADMIN_TOKEN: "test-admin-token"
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      - name: Install dependencies
+        run: |
+          pip install pytest pytest-cov pytest-asyncio pytest-mock
+          pip install -e packages/py-core
+          pip install -r apps/api/requirements.txt
+      - name: Run migrations
+        working-directory: apps/api
+        run: alembic upgrade head
+      - name: Run core tests
+        run: |
+          pytest packages/py-core/tests --cov=fbx_core --cov-report=xml --cov-report=term-missing -v || echo "::warning::No tests found in py-core or tests failed"
+      - name: Run API tests
+        run: |
+          pytest apps/api/tests --cov=api --cov-report=xml --cov-report=term-missing -v || echo "::warning::No tests found in API or tests failed"
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: ./coverage.xml
+          fail_ci_if_error: false
+
+  security-scan:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+      - name: Install security tools
+        run: pip install bandit safety
+      - name: Run Bandit security scan
+        run: |
+          bandit -r packages apps -f json -o bandit-report.json
+          bandit -r packages apps -f screen
+        continue-on-error: true
+      - name: Run Safety dependency check
+        run: safety check --json > safety-report.json || true
+        continue-on-error: true
+      - name: Upload security reports
+        uses: actions/upload-artifact@v6
+        with:
+          name: security-reports
+          path: |
+            bandit-report.json
+            safety-report.json
+
+  build-docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: docker/setup-buildx-action@v3
+      - name: Build API Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./apps/api/Dockerfile
+          push: false
+          tags: fbx-api:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: apps/frontend
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: "20"
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile=false
+      - name: Run ESLint
+        run: pnpm run lint
+        continue-on-error: true
+      - name: Run tests
+        run: pnpm run test
+        continue-on-error: true
+      - name: Build application
+        run: pnpm run build

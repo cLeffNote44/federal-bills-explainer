@@ -1,0 +1,149 @@
+services:
+  # PostgreSQL Database with pgvector
+  db:
+    image: pgvector/pgvector:pg16
+    container_name: federal-bills-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DB_USER:?DB_USER is required}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD is required}
+      POSTGRES_DB: ${DB_NAME:-federal_bills}
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - federal-bills-network
+
+  # Redis Cache (Optional)
+  redis:
+    image: redis:7.4-alpine
+    container_name: federal-bills-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - federal-bills-network
+
+  # FastAPI Backend
+  api:
+    build:
+      context: .
+      dockerfile: ./apps/api/Dockerfile
+    container_name: federal-bills-api
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: postgresql+psycopg://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/${DB_NAME:-federal_bills}
+      REDIS_URL: redis://redis:6379/0
+      ENVIRONMENT: ${ENVIRONMENT:-development}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY:?JWT_SECRET_KEY is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+      CONGRESS_API_KEY: ${CONGRESS_API_KEY:?CONGRESS_API_KEY is required}
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+    ports:
+      - "${API_PORT:-8000}:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - ./apps/api:/app/apps/api
+      - ./packages/py-core:/app/packages/py-core
+    command: >
+      sh -c "
+        alembic upgrade head &&
+        uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+      "
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/monitoring/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    networks:
+      - federal-bills-network
+
+  # Next.js Frontend (Development)
+  frontend:
+    build:
+      context: ./apps/frontend
+      dockerfile: Dockerfile.dev
+    container_name: federal-bills-frontend
+    restart: unless-stopped
+    environment:
+      NEXT_PUBLIC_API_URL: ${NEXT_PUBLIC_API_URL:-http://localhost:8000}
+      NODE_ENV: development
+    ports:
+      - "${FRONTEND_PORT:-3000}:3000"
+    depends_on:
+      - api
+    volumes:
+      - ./apps/frontend:/app
+      - /app/.next
+    command: pnpm dev
+    networks:
+      - federal-bills-network
+
+  # Ingestion Service (Run periodically)
+  ingestion:
+    build:
+      context: .
+      dockerfile: ./apps/ingestion/Dockerfile
+    container_name: federal-bills-ingestion
+    environment:
+      DATABASE_URL: postgresql+psycopg://${DB_USER:?DB_USER is required}:${DB_PASSWORD:?DB_PASSWORD is required}@db:5432/${DB_NAME:-federal_bills}
+      REDIS_URL: redis://redis:6379/0
+      CONGRESS_API_KEY: ${CONGRESS_API_KEY:?CONGRESS_API_KEY is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./apps/ingestion:/app/apps/ingestion
+      - ./packages/py-core:/app/packages/py-core
+    command: echo "Ingestion service ready. Run 'docker-compose run ingestion python -m fbx_ingest.cli sync' to ingest bills"
+    networks:
+      - federal-bills-network
+
+  # pgAdmin (Optional - Database GUI)
+  pgadmin:
+    image: dpage/pgadmin4:8.12
+    container_name: federal-bills-pgadmin
+    restart: unless-stopped
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:?PGADMIN_EMAIL is required}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:?PGADMIN_PASSWORD is required}
+      PGADMIN_CONFIG_SERVER_MODE: 'False'
+    ports:
+      - "${PGADMIN_PORT:-5050}:80"
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    depends_on:
+      - db
+    networks:
+      - federal-bills-network
+    profiles:
+      - tools
+
+networks:
+  federal-bills-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  redis_data:
+  pgadmin_data:

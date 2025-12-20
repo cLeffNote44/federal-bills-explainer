@@ -1,0 +1,200 @@
+groups:
+  - name: api_alerts
+    interval: 30s
+    rules:
+      # High error rate alert
+      - alert: HighErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.05
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API error rate detected"
+          description: "Error rate is {{ $value | humanizePercentage }} over the last 5 minutes"
+          dashboard: "http://grafana:3000/d/api-overview"
+
+      # Critical error rate
+      - alert: CriticalErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"5.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.10
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Critical API error rate"
+          description: "Error rate is {{ $value | humanizePercentage }} - immediate attention required"
+
+      # API is down
+      - alert: APIDown
+        expr: up{job="federal-bills-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Federal Bills API is down"
+          description: "API has been down for more than 1 minute"
+
+      # High response time
+      - alert: HighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, method, handler)
+          ) > 2.0
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API response time"
+          description: "95th percentile response time is {{ $value }}s for {{ $labels.method }} {{ $labels.handler }}"
+
+      # Very high response time
+      - alert: VeryHighResponseTime
+        expr: |
+          histogram_quantile(0.95,
+            sum(rate(http_request_duration_seconds_bucket[5m])) by (le, method, handler)
+          ) > 5.0
+        for: 2m
+        labels:
+          severity: critical
+          component: api
+        annotations:
+          summary: "Very high API response time"
+          description: "95th percentile response time is {{ $value }}s - performance degraded"
+
+      # High request rate
+      - alert: HighRequestRate
+        expr: sum(rate(http_requests_total[1m])) > 1000
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API request rate"
+          description: "Request rate is {{ $value }} req/s - possible traffic spike or attack"
+
+      # Too many 4xx errors
+      - alert: HighClientErrorRate
+        expr: |
+          (
+            sum(rate(http_requests_total{status=~"4.."}[5m]))
+            /
+            sum(rate(http_requests_total[5m]))
+          ) > 0.15
+        for: 10m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High client error rate"
+          description: "4xx error rate is {{ $value | humanizePercentage }} - check for API changes or client issues"
+
+      # Memory usage high
+      - alert: HighMemoryUsage
+        expr: |
+          (
+            process_resident_memory_bytes{job="federal-bills-api"}
+            /
+            process_virtual_memory_max_bytes{job="federal-bills-api"}
+          ) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "High API memory usage"
+          description: "Memory usage is {{ $value | humanizePercentage }} - consider scaling"
+
+      # Too many active requests
+      - alert: TooManyActiveRequests
+        expr: http_requests_inprogress{job="federal-bills-api"} > 50
+        for: 5m
+        labels:
+          severity: warning
+          component: api
+        annotations:
+          summary: "Too many active requests"
+          description: "{{ $value }} requests are currently being processed"
+
+  - name: database_alerts
+    interval: 30s
+    rules:
+      # PostgreSQL is down
+      - alert: PostgreSQLDown
+        expr: up{job="postgres-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: database
+        annotations:
+          summary: "PostgreSQL database is down"
+          description: "Database has been unreachable for more than 1 minute"
+
+      # High database connection usage
+      - alert: HighDatabaseConnections
+        expr: |
+          (
+            pg_stat_database_numbackends
+            /
+            pg_settings_max_connections
+          ) > 0.80
+        for: 5m
+        labels:
+          severity: warning
+          component: database
+        annotations:
+          summary: "High database connection usage"
+          description: "Connection pool is {{ $value | humanizePercentage }} full"
+
+  - name: cache_alerts
+    interval: 30s
+    rules:
+      # Redis is down
+      - alert: RedisDown
+        expr: up{job="redis-exporter"} == 0
+        for: 1m
+        labels:
+          severity: critical
+          component: cache
+        annotations:
+          summary: "Redis cache is down"
+          description: "Redis has been unreachable for more than 1 minute"
+
+      # High memory usage
+      - alert: RedisHighMemory
+        expr: redis_memory_used_bytes / redis_memory_max_bytes > 0.90
+        for: 5m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Redis memory usage is high"
+          description: "Redis memory is {{ $value | humanizePercentage }} full"
+
+      # Low cache hit rate
+      - alert: LowCacheHitRate
+        expr: |
+          (
+            rate(redis_keyspace_hits_total[5m])
+            /
+            (rate(redis_keyspace_hits_total[5m]) + rate(redis_keyspace_misses_total[5m]))
+          ) < 0.60
+        for: 10m
+        labels:
+          severity: warning
+          component: cache
+        annotations:
+          summary: "Low cache hit rate"
+          description: "Cache hit rate is {{ $value | humanizePercentage }} - consider tuning caching strategy"

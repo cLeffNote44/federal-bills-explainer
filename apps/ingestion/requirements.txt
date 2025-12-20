@@ -1,0 +1,23 @@
+# Core dependencies
+typer[all]==0.20.0
+httpx==0.28.1
+pydantic==2.12.5
+pydantic-settings==2.1.0
+python-dotenv==1.2.1
+rich==14.2.0
+tenacity==9.1.2
+
+# ML/AI dependencies
+sentence-transformers==5.1.2
+torch>=2.0.0
+transformers==4.36.2
+datasets==4.4.1
+accelerate==1.12.0
+
+# Database and utilities
+sqlalchemy==2.0.23
+psycopg2-binary==2.9.11
+pgvector==0.2.4
+
+# Local package
+-e ../../packages/py-core
