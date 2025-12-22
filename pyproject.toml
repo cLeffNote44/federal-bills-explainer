@@ -9,7 +9,7 @@ keywords = ["legislation", "congress", "ai", "nlp", "civic-tech"]
 
 [tool.poetry.dependencies]
 python = "^3.11"
-fastapi = "^0.104.1"
+fastapi = "^0.127.0"
 uvicorn = {extras = ["standard"], version = "^0.24.0"}
 sqlalchemy = "^2.0.23"
 alembic = "^1.12.1"
