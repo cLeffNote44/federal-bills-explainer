@@ -17,7 +17,7 @@ accelerate==1.12.0
 # Database and utilities
 sqlalchemy==2.0.23
 psycopg2-binary==2.9.11
-pgvector==0.2.4
+pgvector==0.4.2
 
 # Local package
 -e ../../packages/py-core
