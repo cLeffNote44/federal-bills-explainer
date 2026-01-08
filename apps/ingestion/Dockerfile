@@ -1,6 +1,6 @@
 # Build with repo root as context:
 #   docker build -f apps/ingestion/Dockerfile .
-FROM python:3.12-slim
+FROM python:3.14-slim
 
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
