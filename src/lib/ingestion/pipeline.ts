@@ -1,6 +1,6 @@
 import { db } from "@/lib/db";
 import { bills, explanations, embeddings, billTopics, ingestionJobs } from "@/lib/db/schema";
-import { eq, and } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { fetchEnactedBills, getBillSummary } from "@/lib/congress/client";
 import { generateBillExplanation } from "@/lib/ai/explain";
 import { generateEmbedding, buildEmbeddingText } from "@/lib/ai/embed";
@@ -39,7 +39,7 @@ export async function runIngestion(options: IngestOptions): Promise<IngestResult
 
   let processed = 0;
   let failed = 0;
-  let skipped = 0;
+  const skipped = 0;
 
   try {
     // Fetch bills from Congress.gov

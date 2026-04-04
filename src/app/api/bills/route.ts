@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { bills } from "@/lib/db/schema";
 import { billListQuery } from "@/lib/validators";
-import { eq, ilike, and, gte, lte, desc, asc, sql, count } from "drizzle-orm";
+import { eq, and, gte, lte, desc, asc, sql, count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {

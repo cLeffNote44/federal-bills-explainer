@@ -26,7 +26,7 @@ export interface ExplanationResult {
 export async function generateBillExplanation(
   bill: BillInput
 ): Promise<ExplanationResult> {
-  const model = getExplanationModel();
+  const model = await getExplanationModel();
 
   const billContext = [
     `Bill: ${bill.billType.toUpperCase()}-${bill.number} (${bill.congress}th Congress)`,

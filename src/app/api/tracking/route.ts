@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { billTracking, bills } from "@/lib/db/schema";
 import { createTrackingBody, updateTrackingBody } from "@/lib/validators";
 import { requireAuth } from "@/lib/supabase/auth-helpers";
-import { eq, and, gte } from "drizzle-orm";
+import { eq, and } from "drizzle-orm";
 import { subHours } from "date-fns";
 
 export async function GET(request: NextRequest) {

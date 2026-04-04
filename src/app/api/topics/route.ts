@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { billTopics } from "@/lib/db/schema";
-import { sql, count, eq, desc } from "drizzle-orm";
+import { count, desc } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {

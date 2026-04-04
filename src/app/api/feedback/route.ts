@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { explanationFeedback } from "@/lib/db/schema";
 import { submitFeedbackBody } from "@/lib/validators";
 import { createClient } from "@/lib/supabase/server";
-import { eq, count, and } from "drizzle-orm";
+import { eq, count } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 // POST /api/feedback — submit feedback (anonymous or authenticated)

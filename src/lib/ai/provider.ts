@@ -11,12 +11,13 @@ function getProvider(): AIProvider {
  * Returns the language model for generating explanations.
  * Claude in production, Ollama for local dev — same AI SDK interface.
  */
-export function getExplanationModel() {
+export async function getExplanationModel() {
   const provider = getProvider();
 
   if (provider === "ollama") {
     // Ollama uses OpenAI-compatible API via AI SDK
-    const { createOpenAI } = require("@ai-sdk/openai");
+    // Dynamic import would be async; use createOpenAI from already-imported module
+    const { createOpenAI } = await import("@ai-sdk/openai");
     const ollama = createOpenAI({
       baseURL: process.env.OLLAMA_BASE_URL + "/v1",
       apiKey: "ollama", // Ollama doesn't need a real key
