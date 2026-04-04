@@ -1,158 +1,46 @@
-# Python
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-env/
-venv/
-.venv/
-ENV/
-env.bak/
-venv.bak/
-*.egg-info/
-dist/
-build/
-*.egg
-.pytest_cache/
-.coverage
-htmlcov/
-.tox/
-.hypothesis/
-*.log
-*.pot
-*.pyc
-.mypy_cache/
-.dmypy.json
-dmypy.json
-.pyre/
-.ruff_cache/
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
-# Node.js
-node_modules/
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+.yarn/*
+!.yarn/patches
+!.yarn/plugins
+!.yarn/releases
+!.yarn/versions
+
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-lerna-debug.log*
 .pnpm-debug.log*
-.npm
-.yarn-integrity
-*.tsbuildinfo
-.next/
-out/
-dist/
-build/
 
-# Environment files
+# env files
 .env
 .env.local
 .env.*.local
-.env.development
-.env.production
-*.env
+
+# keep example
 !.env.example
 
-# IDE
-.vscode/
-.idea/
-.claude/
-*.swp
-*.swo
-*~
-.DS_Store
-Thumbs.db
-.vs/
-*.sublime-project
-*.sublime-workspace
+# vercel
+.vercel
 
-# Database
-*.db
-*.sqlite
-*.sqlite3
-data/
-postgres-data/
-
-# Logs
-logs/
-*.log
-npm-debug.log*
-yarn-debug.log*
-pnpm-debug.log*
-
-# Testing
-coverage/
-.nyc_output/
-*.lcov
-test-results/
-playwright-report/
-playwright/.cache/
-
-# Temporary files
-tmp/
-temp/
-*.tmp
-*.temp
-.cache/
-
-# Docker
-docker-compose.override.yml
-.dockerignore
-
-# OS files
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
-desktop.ini
-
-# Jupyter Notebooks
-.ipynb_checkpoints/
-*.ipynb
-
-# ML Models (if stored locally)
-models/
-*.pkl
-*.h5
-*.pt
-*.pth
-*.onnx
-
-# Vector embeddings
-embeddings/
-*.npy
-*.npz
-
-# Generated files
-*.generated.ts
-*.generated.js
-generated/
-
-# Certificates
-*.pem
-*.key
-*.crt
-*.cert
-
-# Package files
-*.jar
-*.war
-*.nar
-*.ear
-*.zip
-*.tar.gz
-*.rar
-
-# Backup files
-*.bak
-*.backup
-*~
-.backup/
-
-# Lock files (keep package-lock.json and pnpm-lock.yaml)
-# Uncomment if you want to ignore lock files
-# package-lock.json
-# yarn.lock
-# pnpm-lock.yaml
+# typescript
+*.tsbuildinfo
+next-env.d.ts

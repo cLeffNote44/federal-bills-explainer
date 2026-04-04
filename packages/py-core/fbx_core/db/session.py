@@ -1,8 +1,0 @@
-from sqlalchemy import create_engine
-from sqlalchemy.orm import sessionmaker
-from fbx_core.utils.settings import Settings
-
-settings = Settings()
-engine = create_engine(settings.database_url, pool_pre_ping=True, future=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
-
