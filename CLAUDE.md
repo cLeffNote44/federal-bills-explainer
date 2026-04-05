@@ -8,7 +8,7 @@ AI-powered platform that makes federal legislation accessible through plain-lang
 - **Database**: Supabase (Postgres + pgvector + Auth + RLS)
 - **ORM**: Drizzle ORM
 - **AI**: Claude API (prod) + Ollama (local dev) via Vercel AI SDK
-- **Embeddings**: OpenAI text-embedding-3-small (1536d)
+- **Search**: Postgres full-text search (weighted tsvector on title/summary/policy_area)
 - **Styling**: Tailwind CSS 4 + shadcn/ui
 - **State**: Zustand + TanStack React Query
 - **Deployment**: Vercel + Supabase

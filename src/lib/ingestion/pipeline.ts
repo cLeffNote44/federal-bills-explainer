@@ -1,9 +1,8 @@
 import { db } from "@/lib/db";
-import { bills, explanations, embeddings, billTopics, ingestionJobs } from "@/lib/db/schema";
+import { bills, explanations, billTopics, ingestionJobs } from "@/lib/db/schema";
 import { eq } from "drizzle-orm";
 import { fetchEnactedBills, getBillSummary } from "@/lib/congress/client";
 import { generateBillExplanation } from "@/lib/ai/explain";
-import { generateEmbedding, buildEmbeddingText } from "@/lib/ai/embed";
 import type { CongressBillDetail } from "@/lib/congress/types";
 
 interface IngestOptions {
@@ -218,26 +217,6 @@ async function processSingleBill(
       modelProvider: process.env.AI_PROVIDER ?? "claude",
     });
   }
-
-  // Generate embedding
-  const embeddingText = buildEmbeddingText(bill.title, explanationResult.text);
-  const embeddingResult = await generateEmbedding(embeddingText);
-
-  await db
-    .insert(embeddings)
-    .values({
-      billId: bill.id,
-      vector: embeddingResult.vector,
-      modelName: embeddingResult.modelName,
-      contentHash: embeddingResult.contentHash,
-    })
-    .onConflictDoUpdate({
-      target: [embeddings.contentHash, embeddings.modelName],
-      set: {
-        vector: embeddingResult.vector,
-        createdAt: new Date(),
-      },
-    });
 
   // Upsert topics
   for (const topic of explanationResult.topics) {

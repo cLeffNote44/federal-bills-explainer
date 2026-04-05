@@ -80,7 +80,7 @@ export function SearchBar() {
           )}
         >
           <Sparkles className="size-3" />
-          AI Search
+          Full-text
         </button>
       </div>
     </form>

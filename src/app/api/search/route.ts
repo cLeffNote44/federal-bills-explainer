@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { bills } from "@/lib/db/schema";
 import { semanticSearchQuery } from "@/lib/validators";
-import { generateEmbedding } from "@/lib/ai/embed";
 import { sql, inArray } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
@@ -10,13 +9,11 @@ export async function GET(request: NextRequest) {
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const query = semanticSearchQuery.parse(params);
 
-    // Generate embedding for the search query
-    const { vector } = await generateEmbedding(query.q);
+    const offset = (query.page - 1) * query.pageSize;
 
-    // Use the match_bills SQL function for vector similarity search
-    const vectorStr = `[${vector.join(",")}]`;
-    const matchResults = await db.execute<{ bill_id: string; similarity: number }>(
-      sql`SELECT * FROM match_bills(${vectorStr}::vector, 0.3, ${query.pageSize})`
+    // Use Postgres full-text search with weighted ranking
+    const matchResults = await db.execute<{ bill_id: string; rank: number }>(
+      sql`SELECT * FROM search_bills_fts(${query.q}, ${query.pageSize}, ${offset})`
     );
 
     if (!matchResults.length) {
@@ -29,9 +26,7 @@ export async function GET(request: NextRequest) {
     }
 
     const billIds = matchResults.map((r) => r.bill_id);
-    const similarityMap = new Map(
-      matchResults.map((r) => [r.bill_id, r.similarity])
-    );
+    const rankMap = new Map(matchResults.map((r) => [r.bill_id, r.rank]));
 
     // Fetch full bill data
     const billRows = await db
@@ -39,13 +34,13 @@ export async function GET(request: NextRequest) {
       .from(bills)
       .where(inArray(bills.id, billIds));
 
-    // Sort by similarity score
+    // Sort by rank
     const sortedBills = billRows
       .map((bill) => ({
         ...bill,
-        similarity: similarityMap.get(bill.id) ?? 0,
+        searchRank: rankMap.get(bill.id) ?? 0,
       }))
-      .sort((a, b) => b.similarity - a.similarity);
+      .sort((a, b) => b.searchRank - a.searchRank);
 
     return NextResponse.json({
       bills: sortedBills,
@@ -54,7 +49,7 @@ export async function GET(request: NextRequest) {
       pageSize: query.pageSize,
     });
   } catch (error) {
-    console.error("Error in semantic search:", error);
+    console.error("Error in search:", error);
     return NextResponse.json({ error: "Internal server error" }, { status: 500 });
   }
 }
