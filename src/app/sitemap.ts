@@ -2,9 +2,20 @@ import { db } from "@/lib/db";
 import { bills, billTopics } from "@/lib/db/schema";
 import type { MetadataRoute } from "next";
 
+// Force dynamic — sitemap needs DB access at request time, not build time
+export const dynamic = "force-dynamic";
+
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL ?? "https://federalbills.app";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  // If no DATABASE_URL, return static pages only
+  if (!process.env.DATABASE_URL) {
+    return [
+      { url: BASE_URL, changeFrequency: "daily", priority: 1 },
+      { url: `${BASE_URL}/topics`, changeFrequency: "weekly", priority: 0.8 },
+    ];
+  }
+
   // Static pages
   const staticPages: MetadataRoute.Sitemap = [
     { url: BASE_URL, changeFrequency: "daily", priority: 1 },
