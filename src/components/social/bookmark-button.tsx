@@ -15,7 +15,7 @@ interface BookmarkButtonProps {
 export function BookmarkButton({ billId, variant = "default" }: BookmarkButtonProps) {
   const { user } = useAuth();
   const openAuthModal = useUIStore((s) => s.openAuthModal);
-  const { data } = useBookmarks();
+  const { data } = useBookmarks(user?.id);
   const createBookmark = useCreateBookmark();
   const deleteBookmark = useDeleteBookmark();
 

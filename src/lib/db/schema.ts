@@ -11,26 +11,8 @@ import {
   uniqueIndex,
   index,
   primaryKey,
-  customType,
 } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
-
-// Custom pgvector type for Drizzle
-const vector = customType<{ data: number[]; driverParam: string }>({
-  dataType() {
-    return "vector(1536)";
-  },
-  toDriver(value: number[]) {
-    return `[${value.join(",")}]`;
-  },
-  fromDriver(value: unknown) {
-    const str = String(value);
-    return str
-      .slice(1, -1)
-      .split(",")
-      .map(Number);
-  },
-});
 
 // ─── Bills ────────────────────────────────────────────
 
@@ -108,27 +90,6 @@ export const explanations = pgTable(
       .defaultNow(),
   },
   (table) => [index("idx_explanations_bill").on(table.billId)]
-);
-
-// ─── Embeddings ───────────────────────────────────────
-
-export const embeddings = pgTable(
-  "embeddings",
-  {
-    id: uuid("id").defaultRandom().primaryKey(),
-    billId: uuid("bill_id")
-      .notNull()
-      .references(() => bills.id, { onDelete: "cascade" }),
-    vector: vector("vector").notNull(),
-    modelName: text("model_name").notNull(),
-    contentHash: text("content_hash").notNull(),
-    createdAt: timestamp("created_at", { withTimezone: true })
-      .notNull()
-      .defaultNow(),
-  },
-  (table) => [
-    uniqueIndex("uq_embedding_cache").on(table.contentHash, table.modelName),
-  ]
 );
 
 // ─── User Profiles ────────────────────────────────────
@@ -311,7 +272,6 @@ export const ingestionJobs = pgTable(
 
 export const billsRelations = relations(bills, ({ many }) => ({
   explanations: many(explanations),
-  embeddings: many(embeddings),
   bookmarks: many(bookmarks),
   tracking: many(billTracking),
   comments: many(comments),
@@ -324,13 +284,6 @@ export const explanationsRelations = relations(explanations, ({ one, many }) => 
     references: [bills.id],
   }),
   feedback: many(explanationFeedback),
-}));
-
-export const embeddingsRelations = relations(embeddings, ({ one }) => ({
-  bill: one(bills, {
-    fields: [embeddings.billId],
-    references: [bills.id],
-  }),
 }));
 
 export const bookmarksRelations = relations(bookmarks, ({ one }) => ({

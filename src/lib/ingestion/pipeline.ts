@@ -198,10 +198,8 @@ async function processSingleBill(
       .set({
         text: explanationResult.text,
         simpleText: explanationResult.simpleText,
-        modelName: process.env.AI_PROVIDER === "ollama"
-          ? (process.env.OLLAMA_MODEL ?? "llama3.1")
-          : "claude-sonnet-4-5-20250514",
-        modelProvider: process.env.AI_PROVIDER ?? "claude",
+        modelName: explanationResult.modelName,
+        modelProvider: explanationResult.modelProvider,
         version: existingExplanation.version + 1,
         generatedAt: new Date(),
       })
@@ -211,10 +209,8 @@ async function processSingleBill(
       billId: bill.id,
       text: explanationResult.text,
       simpleText: explanationResult.simpleText,
-      modelName: process.env.AI_PROVIDER === "ollama"
-        ? (process.env.OLLAMA_MODEL ?? "llama3.1")
-        : "claude-sonnet-4-5-20250514",
-      modelProvider: process.env.AI_PROVIDER ?? "claude",
+      modelName: explanationResult.modelName,
+      modelProvider: explanationResult.modelProvider,
     });
   }
 

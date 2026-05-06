@@ -15,7 +15,7 @@ interface TrackButtonProps {
 export function TrackButton({ billId, variant = "default" }: TrackButtonProps) {
   const { user } = useAuth();
   const openAuthModal = useUIStore((s) => s.openAuthModal);
-  const { data } = useTrackedBills();
+  const { data } = useTrackedBills(user?.id);
   const trackBill = useTrackBill();
   const untrackBill = useUntrackBill();
 

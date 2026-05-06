@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { bills } from "@/lib/db/schema";
 import { semanticSearchQuery } from "@/lib/validators";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { sql, inArray } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
+    const limited = enforceRateLimit(request, {
+      route: "search",
+      limit: 30,
+      windowMs: 60_000,
+    });
+    if (limited) return limited;
+
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const query = semanticSearchQuery.parse(params);
 

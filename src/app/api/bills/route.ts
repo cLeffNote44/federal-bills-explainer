@@ -2,10 +2,18 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { bills } from "@/lib/db/schema";
 import { billListQuery } from "@/lib/validators";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { eq, and, gte, lte, desc, asc, sql, count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
+    const limited = enforceRateLimit(request, {
+      route: "bills:list",
+      limit: 120,
+      windowMs: 60_000,
+    });
+    if (limited) return limited;
+
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const query = billListQuery.parse(params);
 

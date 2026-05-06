@@ -13,7 +13,12 @@ import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/hooks/use-auth";
-import { useComments, useCreateComment, useDeleteComment } from "@/hooks/use-comments";
+import {
+  useComments,
+  useCreateComment,
+  useDeleteComment,
+  useToggleUpvote,
+} from "@/hooks/use-comments";
 import { useUIStore } from "@/stores/ui-store";
 import { cn } from "@/lib/utils";
 import { formatDistanceToNow } from "date-fns";
@@ -163,8 +168,11 @@ function CommentItem({
   const [replyText, setReplyText] = useState("");
   const createComment = useCreateComment();
   const deleteComment = useDeleteComment();
+  const toggleUpvote = useToggleUpvote();
+  const openAuthModal = useUIStore((s) => s.openAuthModal);
 
   const isOwner = currentUserId === comment.userId;
+  const hasUpvoted = comment.hasUpvoted ?? false;
   const timeAgo = formatDistanceToNow(new Date(comment.createdAt), {
     addSuffix: true,
   });
@@ -185,6 +193,14 @@ function CommentItem({
 
   function handleDelete() {
     deleteComment.mutate({ commentId: comment.id, billId });
+  }
+
+  function handleUpvote() {
+    if (!currentUserId) {
+      openAuthModal("login");
+      return;
+    }
+    toggleUpvote.mutate({ commentId: comment.id, billId, hasUpvoted });
   }
 
   return (
@@ -210,10 +226,23 @@ function CommentItem({
 
       {/* Actions */}
       <div className="mt-2 flex items-center gap-2">
-        <div className="flex items-center gap-0.5 text-xs text-muted-foreground">
+        <button
+          onClick={handleUpvote}
+          disabled={toggleUpvote.isPending || comment.isDeleted}
+          aria-pressed={hasUpvoted}
+          aria-label={hasUpvoted ? "Remove upvote" : "Upvote comment"}
+          className={cn(
+            "flex items-center gap-0.5 rounded-md px-1.5 py-0.5 text-xs transition-colors",
+            hasUpvoted
+              ? "bg-primary/10 text-primary"
+              : "text-muted-foreground hover:text-foreground",
+            (toggleUpvote.isPending || comment.isDeleted) &&
+              "cursor-not-allowed opacity-60"
+          )}
+        >
           <ChevronUp className="size-3.5" />
           <span>{comment.upvoteCount}</span>
-        </div>
+        </button>
 
         {comment.replyCount > 0 && (
           <span className="text-xs text-muted-foreground">
