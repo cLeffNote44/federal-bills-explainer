@@ -9,12 +9,16 @@ interface TrackingInput {
   emailNotifications?: boolean;
 }
 
-export function useTrackedBills(userId?: string) {
+export function useTrackedBills(userId?: string, page = 1, pageSize = 20) {
   return useQuery({
-    queryKey: ["tracking", userId ?? null],
+    queryKey: ["tracking", userId ?? null, page, pageSize],
     enabled: !!userId,
     queryFn: async () => {
-      const res = await fetch("/api/tracking");
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      const res = await fetch(`/api/tracking?${params}`);
       if (!res.ok) throw new Error("Failed to fetch tracking");
       return res.json();
     },

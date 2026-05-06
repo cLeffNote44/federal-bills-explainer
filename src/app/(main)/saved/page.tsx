@@ -1,7 +1,9 @@
 "use client";
 
+import { useState } from "react";
 import { Container } from "@/components/layout/container";
 import { BillList } from "@/components/bills/bill-list";
+import { Pagination } from "@/components/shared/pagination";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useAuth } from "@/hooks/use-auth";
 import { useUIStore } from "@/stores/ui-store";
@@ -9,10 +11,13 @@ import { Bookmark, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { Bill } from "@/types";
 
+const PAGE_SIZE = 20;
+
 export default function SavedPage() {
   const { user, loading: authLoading } = useAuth();
   const openAuthModal = useUIStore((s) => s.openAuthModal);
-  const { data, isLoading } = useBookmarks(user?.id);
+  const [page, setPage] = useState(1);
+  const { data, isLoading } = useBookmarks(user?.id, page, PAGE_SIZE);
 
   if (authLoading) {
     return (
@@ -36,6 +41,7 @@ export default function SavedPage() {
 
   const bills: Bill[] =
     data?.bookmarks?.map((b: { bill: Bill }) => b.bill) ?? [];
+  const total = data?.total ?? 0;
 
   return (
     <Container className="py-6">
@@ -48,6 +54,13 @@ export default function SavedPage() {
         bills={bills}
         isLoading={isLoading}
         emptyMessage="No saved bills yet. Browse and bookmark bills you want to follow."
+      />
+
+      <Pagination
+        page={page}
+        pageSize={PAGE_SIZE}
+        total={total}
+        onPageChange={setPage}
       />
     </Container>
   );

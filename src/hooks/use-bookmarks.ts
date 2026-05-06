@@ -8,12 +8,16 @@ interface BookmarkInput {
   folder?: string;
 }
 
-export function useBookmarks(userId?: string) {
+export function useBookmarks(userId?: string, page = 1, pageSize = 20) {
   return useQuery({
-    queryKey: ["bookmarks", userId ?? null],
+    queryKey: ["bookmarks", userId ?? null, page, pageSize],
     enabled: !!userId,
     queryFn: async () => {
-      const res = await fetch("/api/bookmarks");
+      const params = new URLSearchParams({
+        page: String(page),
+        pageSize: String(pageSize),
+      });
+      const res = await fetch(`/api/bookmarks?${params}`);
       if (!res.ok) throw new Error("Failed to fetch bookmarks");
       return res.json();
     },

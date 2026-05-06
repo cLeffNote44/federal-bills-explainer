@@ -3,7 +3,7 @@ import { db } from "@/lib/db";
 import { billTracking, bills } from "@/lib/db/schema";
 import { createTrackingBody, updateTrackingBody } from "@/lib/validators";
 import { requireAuth } from "@/lib/supabase/auth-helpers";
-import { eq, and } from "drizzle-orm";
+import { eq, and, count, desc } from "drizzle-orm";
 import { subHours } from "date-fns";
 
 export async function GET(request: NextRequest) {
@@ -17,21 +17,42 @@ export async function GET(request: NextRequest) {
       return getUpdates(user!.id, Number(sinceHours));
     }
 
-    const results = await db
-      .select({
-        tracking: billTracking,
-        bill: bills,
-      })
-      .from(billTracking)
-      .innerJoin(bills, eq(billTracking.billId, bills.id))
-      .where(eq(billTracking.userId, user!.id))
-      .orderBy(billTracking.createdAt);
+    const page = Math.max(
+      1,
+      Number(request.nextUrl.searchParams.get("page") ?? "1")
+    );
+    const pageSize = Math.min(
+      50,
+      Math.max(1, Number(request.nextUrl.searchParams.get("pageSize") ?? "20"))
+    );
+    const offset = (page - 1) * pageSize;
+
+    const [results, totalResult] = await Promise.all([
+      db
+        .select({
+          tracking: billTracking,
+          bill: bills,
+        })
+        .from(billTracking)
+        .innerJoin(bills, eq(billTracking.billId, bills.id))
+        .where(eq(billTracking.userId, user!.id))
+        .orderBy(desc(billTracking.createdAt))
+        .limit(pageSize)
+        .offset(offset),
+      db
+        .select({ total: count() })
+        .from(billTracking)
+        .where(eq(billTracking.userId, user!.id)),
+    ]);
 
     return NextResponse.json({
       tracking: results.map((r) => ({
         ...r.tracking,
         bill: r.bill,
       })),
+      total: totalResult[0]?.total ?? 0,
+      page,
+      pageSize,
     });
   } catch (error) {
     console.error("Error listing tracking:", error);

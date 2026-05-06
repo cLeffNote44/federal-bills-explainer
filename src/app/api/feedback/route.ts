@@ -3,12 +3,20 @@ import { db } from "@/lib/db";
 import { explanationFeedback } from "@/lib/db/schema";
 import { submitFeedbackBody } from "@/lib/validators";
 import { createClient } from "@/lib/supabase/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { eq, count } from "drizzle-orm";
 import { sql } from "drizzle-orm";
 
 // POST /api/feedback — submit feedback (anonymous or authenticated)
 export async function POST(request: NextRequest) {
   try {
+    const limited = enforceRateLimit(request, {
+      route: "feedback:post",
+      limit: 20,
+      windowMs: 60_000,
+    });
+    if (limited) return limited;
+
     const body = submitFeedbackBody.parse(await request.json());
 
     // Optionally get user if authenticated

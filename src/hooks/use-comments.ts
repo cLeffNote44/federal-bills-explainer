@@ -70,3 +70,34 @@ export function useDeleteComment() {
     },
   });
 }
+
+export function useToggleUpvote() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({
+      commentId,
+      hasUpvoted,
+    }: {
+      commentId: string;
+      billId: string;
+      hasUpvoted: boolean;
+    }) => {
+      const res = hasUpvoted
+        ? await fetch(`/api/comments/upvote?commentId=${commentId}`, {
+            method: "DELETE",
+          })
+        : await fetch("/api/comments/upvote", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ commentId }),
+          });
+      if (!res.ok) throw new Error("Failed to toggle upvote");
+      return res.json();
+    },
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({
+        queryKey: ["comments", variables.billId],
+      });
+    },
+  });
+}

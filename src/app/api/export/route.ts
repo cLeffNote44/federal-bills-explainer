@@ -3,12 +3,21 @@ import { db } from "@/lib/db";
 import { bills, explanations } from "@/lib/db/schema";
 import { exportQuery } from "@/lib/validators";
 import { requireAuth } from "@/lib/supabase/auth-helpers";
+import { enforceRateLimit } from "@/lib/rate-limit";
 import { eq, desc, and, inArray } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
-    const { error: authError } = await requireAuth();
+    const { user, error: authError } = await requireAuth();
     if (authError) return authError;
+
+    const limited = enforceRateLimit(request, {
+      route: "export",
+      limit: 10,
+      windowMs: 60 * 60_000, // 10 exports per hour per user
+      clientId: user!.id,
+    });
+    if (limited) return limited;
 
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const query = exportQuery.parse(params);

@@ -3,11 +3,20 @@ import { db } from "@/lib/db";
 import { comments, commentUpvotes, userProfiles } from "@/lib/db/schema";
 import { createCommentBody, updateCommentBody } from "@/lib/validators";
 import { requireAuth } from "@/lib/supabase/auth-helpers";
-import { eq, and, count, desc, asc, isNull } from "drizzle-orm";
+import { createClient } from "@/lib/supabase/server";
+import { enforceRateLimit } from "@/lib/rate-limit";
+import { eq, and, count, desc, asc, isNull, inArray } from "drizzle-orm";
 
 // GET /api/comments?billId=xxx&page=1&pageSize=20&sort=newest
 export async function GET(request: NextRequest) {
   try {
+    const limited = enforceRateLimit(request, {
+      route: "comments:get",
+      limit: 60,
+      windowMs: 60_000,
+    });
+    if (limited) return limited;
+
     const billId = request.nextUrl.searchParams.get("billId");
     if (!billId) {
       return NextResponse.json({ error: "billId is required" }, { status: 400 });
@@ -35,28 +44,62 @@ export async function GET(request: NextRequest) {
       .limit(pageSize)
       .offset((page - 1) * pageSize);
 
-    // Get upvote counts and reply counts for each comment
-    const enriched = await Promise.all(
-      topComments.map(async ({ comment, displayName }) => {
-        const [[upvoteResult], [replyResult]] = await Promise.all([
-          db
-            .select({ count: count() })
-            .from(commentUpvotes)
-            .where(eq(commentUpvotes.commentId, comment.id)),
-          db
-            .select({ count: count() })
-            .from(comments)
-            .where(eq(comments.parentId, comment.id)),
-        ]);
+    // Resolve current user (may be unauthenticated)
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-        return {
-          ...comment,
-          displayName,
-          upvoteCount: upvoteResult?.count ?? 0,
-          replyCount: replyResult?.count ?? 0,
-        };
-      })
+    const commentIds = topComments.map((c) => c.comment.id);
+
+    // Batch fetch upvote counts, reply counts, and current user's upvotes
+    const [upvoteRows, replyRows, myUpvoteRows] = await Promise.all([
+      commentIds.length > 0
+        ? db
+            .select({
+              commentId: commentUpvotes.commentId,
+              count: count(),
+            })
+            .from(commentUpvotes)
+            .where(inArray(commentUpvotes.commentId, commentIds))
+            .groupBy(commentUpvotes.commentId)
+        : Promise.resolve([]),
+      commentIds.length > 0
+        ? db
+            .select({
+              parentId: comments.parentId,
+              count: count(),
+            })
+            .from(comments)
+            .where(inArray(comments.parentId, commentIds))
+            .groupBy(comments.parentId)
+        : Promise.resolve([]),
+      user && commentIds.length > 0
+        ? db
+            .select({ commentId: commentUpvotes.commentId })
+            .from(commentUpvotes)
+            .where(
+              and(
+                eq(commentUpvotes.userId, user.id),
+                inArray(commentUpvotes.commentId, commentIds)
+              )
+            )
+        : Promise.resolve([]),
+    ]);
+
+    const upvoteCounts = new Map(upvoteRows.map((r) => [r.commentId, r.count]));
+    const replyCounts = new Map(
+      replyRows.map((r) => [r.parentId as string, r.count])
     );
+    const myUpvotes = new Set(myUpvoteRows.map((r) => r.commentId));
+
+    const enriched = topComments.map(({ comment, displayName }) => ({
+      ...comment,
+      displayName,
+      upvoteCount: upvoteCounts.get(comment.id) ?? 0,
+      replyCount: replyCounts.get(comment.id) ?? 0,
+      hasUpvoted: myUpvotes.has(comment.id),
+    }));
 
     const [totalResult] = await db
       .select({ total: count() })
@@ -80,6 +123,14 @@ export async function POST(request: NextRequest) {
   try {
     const { user, error } = await requireAuth();
     if (error) return error;
+
+    const limited = enforceRateLimit(request, {
+      route: "comments:post",
+      limit: 10,
+      windowMs: 60_000,
+      clientId: user!.id,
+    });
+    if (limited) return limited;
 
     const billId = request.nextUrl.searchParams.get("billId");
     if (!billId) {
