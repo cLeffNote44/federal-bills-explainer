@@ -7,7 +7,7 @@ import { sql, inArray } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
-    const limited = enforceRateLimit(request, {
+    const limited = await enforceRateLimit(request, {
       route: "search",
       limit: 30,
       windowMs: 60_000,

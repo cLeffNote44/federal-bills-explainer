@@ -6,8 +6,8 @@ interface Bucket {
   resetAt: number;
 }
 
-// In-memory bucket store. Per-serverless-instance only — replace with
-// Upstash Redis or Vercel KV for production-grade global rate limiting.
+// In-memory bucket store. Per-serverless-instance only — used as the default
+// backend and as a fallback when Upstash is unavailable.
 const buckets = new Map<string, Bucket>();
 
 // Bound the map size to avoid unbounded memory growth on long-running instances.
@@ -27,7 +27,7 @@ export interface RateLimitResult {
   resetAt: number;
 }
 
-export function rateLimit(
+function rateLimitMemory(
   key: string,
   limit: number,
   windowMs: number
@@ -50,6 +50,62 @@ export function rateLimit(
   return { ok: true, remaining: limit - bucket.count, resetAt: bucket.resetAt };
 }
 
+/**
+ * Upstash REST-backed rate limiter (fixed-window via INCR + PEXPIRE NX).
+ * Returns null if Upstash isn't configured or the call fails — caller should
+ * fall back to the in-memory limiter.
+ */
+async function rateLimitUpstash(
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<RateLimitResult | null> {
+  const url = process.env.UPSTASH_REDIS_REST_URL;
+  const token = process.env.UPSTASH_REDIS_REST_TOKEN;
+  if (!url || !token) return null;
+
+  try {
+    const res = await fetch(url + "/pipeline", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify([
+        ["INCR", key],
+        ["PEXPIRE", key, windowMs, "NX"],
+        ["PTTL", key],
+      ]),
+      // Tight timeout: rate limiting must not become a tail-latency problem.
+      signal: AbortSignal.timeout(500),
+    });
+
+    if (!res.ok) return null;
+
+    const data = (await res.json()) as Array<{ result: number }>;
+    const count = data[0]?.result ?? 0;
+    const ttlMs = data[2]?.result ?? windowMs;
+    const resetAt = Date.now() + (ttlMs > 0 ? ttlMs : windowMs);
+
+    if (count > limit) {
+      return { ok: false, remaining: 0, resetAt };
+    }
+    return { ok: true, remaining: Math.max(0, limit - count), resetAt };
+  } catch {
+    return null;
+  }
+}
+
+export async function rateLimit(
+  key: string,
+  limit: number,
+  windowMs: number
+): Promise<RateLimitResult> {
+  const upstash = await rateLimitUpstash(key, limit, windowMs);
+  if (upstash) return upstash;
+  return rateLimitMemory(key, limit, windowMs);
+}
+
 export function getClientId(request: NextRequest): string {
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0]!.trim();
@@ -59,14 +115,18 @@ export function getClientId(request: NextRequest): string {
 /**
  * Apply a per-route rate limit. Returns a 429 response if the client is
  * over the limit, otherwise returns null and the caller proceeds.
+ *
+ * Uses Upstash Redis (UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN)
+ * when configured for global limiting, falling back to per-instance
+ * in-memory buckets otherwise.
  */
-export function enforceRateLimit(
+export async function enforceRateLimit(
   request: NextRequest,
   options: { route: string; limit: number; windowMs: number; clientId?: string }
-): NextResponse | null {
+): Promise<NextResponse | null> {
   const id = options.clientId ?? getClientId(request);
-  const key = `${options.route}:${id}`;
-  const result = rateLimit(key, options.limit, options.windowMs);
+  const key = `rl:${options.route}:${id}`;
+  const result = await rateLimit(key, options.limit, options.windowMs);
 
   if (!result.ok) {
     return NextResponse.json(

@@ -1,0 +1,47 @@
+name: Ingest
+
+# Daily ingestion cron — portable across deploy targets.
+# Hits the deployed /api/cron/ingest endpoint with the configured CRON_SECRET.
+#
+# Required secrets:
+#   APP_URL      — public URL of the deploy (e.g. https://federal-bills-explainer.vercel.app)
+#   CRON_SECRET  — same value set in the deploy's env vars
+#
+# Use this if your deploy target doesn't have a native scheduler (or as a
+# backup to vercel.json's cron). Safe to run alongside vercel.json — the
+# endpoint is idempotent (upserts by congress/bill_type/number).
+
+on:
+  schedule:
+    # 06:00 UTC daily, mirrors vercel.json
+    - cron: "0 6 * * *"
+  workflow_dispatch:
+
+jobs:
+  ingest:
+    name: Trigger ingestion
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Call /api/cron/ingest
+        env:
+          APP_URL: ${{ secrets.APP_URL }}
+          CRON_SECRET: ${{ secrets.CRON_SECRET }}
+        run: |
+          if [ -z "$APP_URL" ] || [ -z "$CRON_SECRET" ]; then
+            echo "::error::APP_URL and CRON_SECRET must be set as repository secrets."
+            exit 1
+          fi
+          response=$(curl --silent --show-error --fail --max-time 600 \
+            -X POST "$APP_URL/api/cron/ingest" \
+            -H "Authorization: Bearer $CRON_SECRET" \
+            -H "Content-Type: application/json" \
+            -w "\n%{http_code}")
+          body=$(echo "$response" | head -n -1)
+          status=$(echo "$response" | tail -n 1)
+          echo "Status: $status"
+          echo "Body: $body"
+          if [ "$status" != "200" ]; then
+            echo "::error::Ingestion returned non-200 status"
+            exit 1
+          fi

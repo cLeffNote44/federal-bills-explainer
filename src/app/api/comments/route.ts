@@ -10,7 +10,7 @@ import { eq, and, count, desc, asc, isNull, inArray } from "drizzle-orm";
 // GET /api/comments?billId=xxx&page=1&pageSize=20&sort=newest
 export async function GET(request: NextRequest) {
   try {
-    const limited = enforceRateLimit(request, {
+    const limited = await enforceRateLimit(request, {
       route: "comments:get",
       limit: 60,
       windowMs: 60_000,
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     const { user, error } = await requireAuth();
     if (error) return error;
 
-    const limited = enforceRateLimit(request, {
+    const limited = await enforceRateLimit(request, {
       route: "comments:post",
       limit: 10,
       windowMs: 60_000,

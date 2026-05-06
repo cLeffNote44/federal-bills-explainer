@@ -3,6 +3,7 @@ import { bills, explanations, billTopics, ingestionJobs } from "@/lib/db/schema"
 import { eq } from "drizzle-orm";
 import { fetchEnactedBills, getBillSummary } from "@/lib/congress/client";
 import { generateBillExplanation } from "@/lib/ai/explain";
+import { logger } from "@/lib/logger";
 import type { CongressBillDetail } from "@/lib/congress/types";
 
 interface IngestOptions {
@@ -25,7 +26,6 @@ interface IngestResult {
  * - Future: Inngest step function
  */
 export async function runIngestion(options: IngestOptions): Promise<IngestResult> {
-  // Create job record
   const [job] = await db
     .insert(ingestionJobs)
     .values({
@@ -36,32 +36,34 @@ export async function runIngestion(options: IngestOptions): Promise<IngestResult
     })
     .returning();
 
+  const log = logger.child({ jobId: job.id, jobType: "sync" });
+  log.info("Ingestion job started", { ...options });
+
   let processed = 0;
   let failed = 0;
   const skipped = 0;
 
   try {
-    // Fetch bills from Congress.gov
     const congressBills = await fetchEnactedBills({
       fromDate: options.fromDate,
       toDate: options.toDate,
       maxRecords: options.maxRecords ?? 20,
     });
 
+    log.info("Fetched bills from Congress.gov", { count: congressBills.length });
+
     for (const congressBill of congressBills) {
+      const billRef = `${congressBill.type}-${congressBill.number}`;
       try {
         await processSingleBill(congressBill);
         processed++;
+        log.debug("Bill processed", { bill: billRef });
       } catch (error) {
-        console.error(
-          `Failed to process bill ${congressBill.type}-${congressBill.number}:`,
-          error
-        );
+        log.error("Bill processing failed", error, { bill: billRef });
         failed++;
       }
     }
 
-    // Update job as completed
     await db
       .update(ingestionJobs)
       .set({
@@ -72,8 +74,9 @@ export async function runIngestion(options: IngestOptions): Promise<IngestResult
         completedAt: new Date(),
       })
       .where(eq(ingestionJobs.id, job.id));
+
+    log.info("Ingestion job completed", { processed, failed, skipped });
   } catch (error) {
-    // Update job as failed
     await db
       .update(ingestionJobs)
       .set({
@@ -84,6 +87,7 @@ export async function runIngestion(options: IngestOptions): Promise<IngestResult
         completedAt: new Date(),
       })
       .where(eq(ingestionJobs.id, job.id));
+    log.error("Ingestion job failed", error, { processed, failed });
     throw error;
   }
 
