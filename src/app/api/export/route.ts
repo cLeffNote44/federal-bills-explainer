@@ -11,7 +11,7 @@ export async function GET(request: NextRequest) {
     const { user, error: authError } = await requireAuth();
     if (authError) return authError;
 
-    const limited = enforceRateLimit(request, {
+    const limited = await enforceRateLimit(request, {
       route: "export",
       limit: 10,
       windowMs: 60 * 60_000, // 10 exports per hour per user

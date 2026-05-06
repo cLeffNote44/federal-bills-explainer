@@ -7,7 +7,7 @@ import { eq, and, gte, lte, desc, asc, sql, count } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
-    const limited = enforceRateLimit(request, {
+    const limited = await enforceRateLimit(request, {
       route: "bills:list",
       limit: 120,
       windowMs: 60_000,

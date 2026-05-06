@@ -10,7 +10,7 @@ import { sql } from "drizzle-orm";
 // POST /api/feedback — submit feedback (anonymous or authenticated)
 export async function POST(request: NextRequest) {
   try {
-    const limited = enforceRateLimit(request, {
+    const limited = await enforceRateLimit(request, {
       route: "feedback:post",
       limit: 20,
       windowMs: 60_000,
