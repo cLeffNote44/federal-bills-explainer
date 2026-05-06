@@ -8,9 +8,10 @@ interface BookmarkInput {
   folder?: string;
 }
 
-export function useBookmarks() {
+export function useBookmarks(userId?: string) {
   return useQuery({
-    queryKey: ["bookmarks"],
+    queryKey: ["bookmarks", userId ?? null],
+    enabled: !!userId,
     queryFn: async () => {
       const res = await fetch("/api/bookmarks");
       if (!res.ok) throw new Error("Failed to fetch bookmarks");

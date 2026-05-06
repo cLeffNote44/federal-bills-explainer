@@ -21,12 +21,14 @@ export interface ExplanationResult {
   text: string;
   simpleText: string;
   topics: { name: string; confidence: number }[];
+  modelName: string;
+  modelProvider: string;
 }
 
 export async function generateBillExplanation(
   bill: BillInput
 ): Promise<ExplanationResult> {
-  const model = await getExplanationModel();
+  const { model, modelName, modelProvider } = await getExplanationModel();
 
   const billContext = [
     `Bill: ${bill.billType.toUpperCase()}-${bill.number} (${bill.congress}th Congress)`,
@@ -84,5 +86,7 @@ ${billContext}`,
     text: explanation || fullText,
     simpleText: eli5 || "",
     topics: topicResult.topics,
+    modelName,
+    modelProvider,
   };
 }

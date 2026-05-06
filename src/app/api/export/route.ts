@@ -2,10 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 import { bills, explanations } from "@/lib/db/schema";
 import { exportQuery } from "@/lib/validators";
-import { eq, desc } from "drizzle-orm";
+import { requireAuth } from "@/lib/supabase/auth-helpers";
+import { eq, desc, and, inArray } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
+    const { error: authError } = await requireAuth();
+    if (authError) return authError;
+
     const params = Object.fromEntries(request.nextUrl.searchParams);
     const query = exportQuery.parse(params);
 
@@ -13,7 +17,7 @@ export async function GET(request: NextRequest) {
     if (query.congress) conditions.push(eq(bills.congress, query.congress));
     if (query.status) conditions.push(eq(bills.status, query.status));
 
-    const where = conditions.length > 0 ? conditions[0] : undefined;
+    const where = conditions.length > 0 ? and(...conditions) : undefined;
 
     const billRows = await db
       .select()
@@ -58,18 +62,27 @@ export async function GET(request: NextRequest) {
     }
 
     // JSON format
-    let data = billRows;
-    if (query.includeExplanations) {
-      const withExplanations = await Promise.all(
-        billRows.map(async (bill) => {
-          const explanation = await db.query.explanations.findFirst({
-            where: eq(explanations.billId, bill.id),
-            orderBy: (exp, { desc }) => [desc(exp.version)],
-          });
-          return { ...bill, explanation };
-        })
-      );
-      data = withExplanations as typeof data;
+    let data: (typeof billRows[number] & { explanation?: typeof explanations.$inferSelect | null })[] = billRows;
+    if (query.includeExplanations && billRows.length > 0) {
+      const billIds = billRows.map((b) => b.id);
+      const allExplanations = await db
+        .select()
+        .from(explanations)
+        .where(inArray(explanations.billId, billIds));
+
+      // Pick highest version per bill
+      const byBillId = new Map<string, typeof explanations.$inferSelect>();
+      for (const exp of allExplanations) {
+        const existing = byBillId.get(exp.billId);
+        if (!existing || exp.version > existing.version) {
+          byBillId.set(exp.billId, exp);
+        }
+      }
+
+      data = billRows.map((bill) => ({
+        ...bill,
+        explanation: byBillId.get(bill.id) ?? null,
+      }));
     }
 
     return NextResponse.json({

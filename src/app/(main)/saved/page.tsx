@@ -5,15 +5,24 @@ import { BillList } from "@/components/bills/bill-list";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { useAuth } from "@/hooks/use-auth";
 import { useUIStore } from "@/stores/ui-store";
-import { Bookmark } from "lucide-react";
+import { Bookmark, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import type { Bill } from "@/types";
 
 export default function SavedPage() {
   const { user, loading: authLoading } = useAuth();
   const openAuthModal = useUIStore((s) => s.openAuthModal);
-  const { data, isLoading } = useBookmarks();
+  const { data, isLoading } = useBookmarks(user?.id);
 
-  if (!authLoading && !user) {
+  if (authLoading) {
+    return (
+      <Container className="flex items-center justify-center py-24">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </Container>
+    );
+  }
+
+  if (!user) {
     return (
       <Container className="flex flex-col items-center justify-center gap-4 py-24">
         <Bookmark className="size-10 text-muted-foreground/40" />
@@ -25,7 +34,8 @@ export default function SavedPage() {
     );
   }
 
-  const bills = data?.bookmarks?.map((b: { bill: unknown }) => b.bill) ?? [];
+  const bills: Bill[] =
+    data?.bookmarks?.map((b: { bill: Bill }) => b.bill) ?? [];
 
   return (
     <Container className="py-6">
@@ -36,7 +46,7 @@ export default function SavedPage() {
 
       <BillList
         bills={bills}
-        isLoading={authLoading || isLoading}
+        isLoading={isLoading}
         emptyMessage="No saved bills yet. Browse and bookmark bills you want to follow."
       />
     </Container>
